@@ -1675,6 +1675,7 @@ async function submitForm() {
           '<div class="gen-title">' + SERVICE_LABELS[data.service] + '</div>' +
           '<div class="gen-content">' + escapedContent + '</div>' +
           '<div class="gen-actions">' +
+            '<button class="btn-action" onclick="openModifyInChat(this)">修改</button>' +
             '<button class="btn-action" onclick="copyGenerated(this)">复制内容</button>' +
             '<button class="btn-action" onclick="downloadGeneratedContent(\'' + dlFilename.replace(/'/g,"\\'") + '\')">下载文档</button>' +
             '<button class="btn-action confirm" onclick="confirmGenerated(this)">确认</button>' +
@@ -1684,11 +1685,84 @@ async function submitForm() {
     // Store content for copy/download
     resultDiv._generatedContent = generatedContent;
     resultDiv._dlFilename = dlFilename;
+    resultDiv.dataset.filename = dlFilename;
     chatMessages.appendChild(resultDiv);
     scrollToBottom();
   }, delay);
 }
 window.submitForm = submitForm;
+
+
+
+function openModifyInChat(btn) {
+  const card = btn.closest('.generated-card');
+  const contentEl = card.querySelector('.gen-content');
+  const actionsEl = card.querySelector('.gen-actions');
+  
+  // Check modify count
+  let modifyCount = parseInt(card.dataset.modifyCount || '0');
+  if (modifyCount >= 3) {
+    alert('修改次数已用完（最多3次）。如需进一步调整，请通过意见反馈提交需求。');
+    return;
+  }
+  
+  // Replace content with editable area and input
+  contentEl.innerHTML = '<div class="modify-area" contenteditable="true" style="border:1px solid #d1d5db;border-radius:6px;padding:10px;min-height:120px;font-size:14px;line-height:1.7;">' + contentEl.innerHTML + '</div>' +
+    '<div style="margin-top:10px;display:flex;gap:8px;">' +
+    '<input type="text" id="modifyChatInput" placeholder="请描述需要修改的内容..." style="flex:1;padding:8px 12px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;" onkeydown="if(event.key===\'Enter\'){event.preventDefault();sendModifyInChat(this);}"/>' +
+    '<button onclick="sendModifyInChat(this.previousElementSibling)" style="padding:8px 14px;background:#2563eb;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:13px;">发送</button>' +
+    '</div>';
+  
+  // Update actions
+  actionsEl.innerHTML = '<button class="btn-action" onclick="confirmModifyInChat(this)">完成修改</button>';
+  card.dataset.modifyCount = modifyCount + 1;
+}
+
+function sendModifyInChat(input) {
+  const msg = input.value.trim();
+  if (!msg) return;
+  const card = input.closest('.generated-card');
+  const contentEl = card.querySelector('.gen-content');
+  const modifyArea = contentEl.querySelector('.modify-area');
+  if (!modifyArea) return;
+  
+  // Simulate AI modification (replace content based on user input)
+  modifyArea.innerHTML = '<div style="color:#6b7280;font-style:italic;padding:10px;">正在根据您的意见修改...</div>';
+  
+  setTimeout(() => {
+    const originalContent = card.dataset.originalContent || modifyArea.innerHTML;
+    if (!card.dataset.originalContent) card.dataset.originalContent = originalContent;
+    
+    // Simple modification simulation
+    modifyArea.innerHTML = originalContent + 
+      '<div style="margin-top:12px;padding-top:10px;border-top:1px dashed #d1d5db;color:#2563eb;">' +
+      '<strong>[已修改]</strong> 已根据您的意见"' + msg + '"进行调整。如需继续修改请继续描述，满意后点击"完成修改"。</div>';
+  }, 1500);
+  
+  input.value = '';
+}
+
+function confirmModifyInChat(btn) {
+  const card = btn.closest('.generated-card');
+  const contentEl = card.querySelector('.gen-content');
+  const actionsEl = card.querySelector('.gen-actions');
+  const modifyArea = contentEl.querySelector('.modify-area');
+  
+  // Save final content
+  if (modifyArea) {
+    contentEl.innerHTML = modifyArea.innerHTML;
+  }
+  
+  // Restore actions
+  const dlFilename = card.dataset.filename || 'result';
+  actionsEl.innerHTML =
+    '<button class="btn-action" onclick="openModifyInChat(this)">修改</button>' +
+    '<button class="btn-action" onclick="copyGenerated(this)">复制内容</button>' +
+    '<button class="btn-action" onclick="downloadGeneratedContent(\'' + dlFilename.replace(/'/g,"\\'") + '\')">下载文档</button>' +
+    '<button class="btn-action confirm" onclick="confirmGenerated(this)">确认</button>';
+  
+  alert('修改完成！请点击"确认"保存最终版本。');
+}
 
 function escapeHtml(str) {
   return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
@@ -2113,6 +2187,78 @@ window.sendModifyMsg = function() {
     input.focus();
   }, 1200);
 };
+
+
+
+function openModifyInChat(btn) {
+  const card = btn.closest('.generated-card');
+  const contentEl = card.querySelector('.gen-content');
+  const actionsEl = card.querySelector('.gen-actions');
+  
+  // Check modify count
+  let modifyCount = parseInt(card.dataset.modifyCount || '0');
+  if (modifyCount >= 3) {
+    alert('修改次数已用完（最多3次）。如需进一步调整，请通过意见反馈提交需求。');
+    return;
+  }
+  
+  // Replace content with editable area and input
+  contentEl.innerHTML = '<div class="modify-area" contenteditable="true" style="border:1px solid #d1d5db;border-radius:6px;padding:10px;min-height:120px;font-size:14px;line-height:1.7;">' + contentEl.innerHTML + '</div>' +
+    '<div style="margin-top:10px;display:flex;gap:8px;">' +
+    '<input type="text" id="modifyChatInput" placeholder="请描述需要修改的内容..." style="flex:1;padding:8px 12px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;" onkeydown="if(event.key===\'Enter\'){event.preventDefault();sendModifyInChat(this);}"/>' +
+    '<button onclick="sendModifyInChat(this.previousElementSibling)" style="padding:8px 14px;background:#2563eb;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:13px;">发送</button>' +
+    '</div>';
+  
+  // Update actions
+  actionsEl.innerHTML = '<button class="btn-action" onclick="confirmModifyInChat(this)">完成修改</button>';
+  card.dataset.modifyCount = modifyCount + 1;
+}
+
+function sendModifyInChat(input) {
+  const msg = input.value.trim();
+  if (!msg) return;
+  const card = input.closest('.generated-card');
+  const contentEl = card.querySelector('.gen-content');
+  const modifyArea = contentEl.querySelector('.modify-area');
+  if (!modifyArea) return;
+  
+  // Simulate AI modification (replace content based on user input)
+  modifyArea.innerHTML = '<div style="color:#6b7280;font-style:italic;padding:10px;">正在根据您的意见修改...</div>';
+  
+  setTimeout(() => {
+    const originalContent = card.dataset.originalContent || modifyArea.innerHTML;
+    if (!card.dataset.originalContent) card.dataset.originalContent = originalContent;
+    
+    // Simple modification simulation
+    modifyArea.innerHTML = originalContent + 
+      '<div style="margin-top:12px;padding-top:10px;border-top:1px dashed #d1d5db;color:#2563eb;">' +
+      '<strong>[已修改]</strong> 已根据您的意见"' + msg + '"进行调整。如需继续修改请继续描述，满意后点击"完成修改"。</div>';
+  }, 1500);
+  
+  input.value = '';
+}
+
+function confirmModifyInChat(btn) {
+  const card = btn.closest('.generated-card');
+  const contentEl = card.querySelector('.gen-content');
+  const actionsEl = card.querySelector('.gen-actions');
+  const modifyArea = contentEl.querySelector('.modify-area');
+  
+  // Save final content
+  if (modifyArea) {
+    contentEl.innerHTML = modifyArea.innerHTML;
+  }
+  
+  // Restore actions
+  const dlFilename = card.dataset.filename || 'result';
+  actionsEl.innerHTML =
+    '<button class="btn-action" onclick="openModifyInChat(this)">修改</button>' +
+    '<button class="btn-action" onclick="copyGenerated(this)">复制内容</button>' +
+    '<button class="btn-action" onclick="downloadGeneratedContent(\'' + dlFilename.replace(/'/g,"\\'") + '\')">下载文档</button>' +
+    '<button class="btn-action confirm" onclick="confirmGenerated(this)">确认</button>';
+  
+  alert('修改完成！请点击"确认"保存最终版本。');
+}
 
 function escapeHtml(str) {
   return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
