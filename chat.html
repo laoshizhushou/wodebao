@@ -1833,7 +1833,12 @@ window.doLogout = async function() {
 async function afterLogin() {
   const { data: { user } } = await sb.auth.getUser();
   if (!user) return;
-  const { data: profile } = await sb.from('profiles').select('*').eq('id', user.id).single();
+  let profile = null;
+  try {
+    const { data, error } = await sb.from('profiles').select('*').eq('id', user.id).single();
+    if (error) console.warn('profiles query error:', error);
+    else profile = data;
+  } catch(e) { console.warn('profiles query exception:', e); }
   window._currentUser = profile || { id: user.id, name: '老师', phone: user.email?.replace('@teacher.local',''), role: 'external', balance: 0, default_region: '', default_textbook: '', default_subject: '' };
   localStorage.setItem('teacher_session', JSON.stringify(window._currentUser));
   document.getElementById('authOverlay').classList.add('hidden');
@@ -1854,10 +1859,10 @@ async function afterLogin() {
 
 // ========== Profile ==========
 window.openProfile = async function() {
-  renderProfile();
-  await loadOrderHistory();
-  await loadPendingResults();
-  await loadUsageStats();
+  try { renderProfile(); } catch(e) { console.warn('renderProfile error:', e); }
+  try { await loadOrderHistory(); } catch(e) { console.warn('loadOrderHistory error:', e); }
+  try { await loadPendingResults(); } catch(e) { console.warn('loadPendingResults error:', e); }
+  try { await loadUsageStats(); } catch(e) { console.warn('loadUsageStats error:', e); }
   document.getElementById('profilePanel').classList.add('open');
   document.getElementById('profileBackdrop').classList.add('open');
 };
