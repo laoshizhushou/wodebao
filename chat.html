@@ -667,6 +667,24 @@
     font-size: 14px; outline: none; width: 140px; text-align: right;
     background: #fff;
   }
+
+  /* ========== 充值卡片 ========== */
+  .recharge-card {
+    background: #F5F5F5; border-radius: 12px; padding: 14px 16px;
+    cursor: pointer; border: 2px solid transparent; transition: all 0.2s;
+    position: relative; margin-bottom: 10px;
+  }
+  .recharge-card:hover, .recharge-card.selected { border-color: #00897B; background: #E0F2F1; }
+  .recharge-card.popular { border-color: #FF6F00; }
+  .rc-badge {
+    position: absolute; top: -8px; right: 12px;
+    background: #FF6F00; color: #fff; font-size: 10px;
+    padding: 2px 8px; border-radius: 8px; font-weight: 600;
+  }
+  .rc-label { font-size: 14px; font-weight: 600; color: #333; }
+  .rc-price { font-size: 20px; font-weight: 700; color: #FF6F00; margin-top: 4px; }
+  .rc-price span { font-size: 12px; font-weight: 400; color: #888; }
+  .rc-save { font-size: 11px; color: #43A047; margin-top: 2px; }
 </style>
 </head>
 <body>
@@ -733,10 +751,9 @@
       <div style="background:#FFF3E0;border-radius:12px;padding:16px;margin-bottom:12px;">
         <div style="font-size:14px;color:#E65100;font-weight:600;" id="rechargeSummary"></div>
       </div>
-      <div style="font-size:13px;color:#888;margin-bottom:12px;">请扫码添加客服完成支付</div>
-      <button class="auth-btn" onclick="contactForPay()" style="background:linear-gradient(135deg,#FF6F00,#FFA726);">
-        💬 联系客服充值
-      </button>
+      <div style="font-size:14px;color:#333;margin-bottom:8px;">请扫码支付，备注手机号</div>
+      <img src="payment_qr.jpg" alt="收款码" style="width:220px;border-radius:12px;box-shadow:0 2px 12px rgba(0,0,0,0.12);">
+      <div style="font-size:12px;color:#999;margin-top:8px;">支付后请联系客服确认</div>
     </div>
   </div>
 
@@ -1428,11 +1445,199 @@ document.querySelector('.wechat-footer').addEventListener('click', () => {
 </div>
 
 <!-- Service Worker Registration & PWA Install Prompt -->
+<script type="importmap">
+{ "imports": { "@supabase/supabase-js": "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm" } }
+</script>
+<script type="module">
+import { createClient } from '@supabase/supabase-js';
+const sb = createClient('https://hsoidekpfhbrnrytudjy.supabase.co', 'sb_publishable_GTMbvPlzAr4CyikOikDJvg_sHT7SsgI');
+window._sb = sb;
+window._currentUser = null;
+
+// ========== Auth Functions ==========
+window.switchAuthTab = function(tab) {
+  document.getElementById('tabLogin').classList.toggle('active', tab === 'login');
+  document.getElementById('tabRegister').classList.toggle('active', tab === 'register');
+  document.getElementById('loginForm').style.display = tab === 'login' ? '' : 'none';
+  document.getElementById('registerForm').style.display = tab === 'register' ? '' : 'none';
+  document.getElementById('authError').textContent = '';
+};
+
+window.doRegister = async function() {
+  const name = document.getElementById('regName').value.trim();
+  const phone = document.getElementById('regPhone').value.trim();
+  const school = document.getElementById('regSchool').value.trim();
+  const password = document.getElementById('regPassword').value;
+  const errEl = document.getElementById('authError');
+  if (!name || !phone || !password) { errEl.textContent = '请填写姓名、手机号和密码'; return; }
+  if (password.length < 6) { errEl.textContent = '密码至少6位'; return; }
+  if (!/^1\d{10}$/.test(phone)) { errEl.textContent = '请输入正确的11位手机号'; return; }
+
+  const btn = document.getElementById('btnRegister');
+  btn.disabled = true; btn.textContent = '注册中...';
+  const { data, error } = await sb.auth.signUp({
+    email: phone + '@teacher.local', password,
+    options: { data: { phone, name } }
+  });
+  if (error && !error.message.includes('already')) {
+    errEl.textContent = '注册失败: ' + error.message; btn.disabled = false; btn.textContent = '注 册'; return;
+  }
+  const userId = data?.user?.id || '';
+  if (userId) {
+    await sb.from('profiles').upsert({ id: userId, phone, name, school, role: 'external', balance: 0 });
+  }
+  btn.disabled = false; btn.textContent = '注 册';
+  await afterLogin();
+};
+
+window.doLogin = async function() {
+  const phone = document.getElementById('loginPhone').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  const errEl = document.getElementById('authError');
+  if (!phone || !password) { errEl.textContent = '请输入手机号和密码'; return; }
+
+  const btn = document.getElementById('btnLogin');
+  btn.disabled = true; btn.textContent = '登录中...';
+  const { data, error } = await sb.auth.signInWithPassword({ email: phone + '@teacher.local', password });
+  if (error) {
+    errEl.textContent = '登录失败: ' + error.message; btn.disabled = false; btn.textContent = '登 录'; return;
+  }
+  btn.disabled = false; btn.textContent = '登 录';
+  await afterLogin();
+};
+
+window.doLogout = async function() {
+  await sb.auth.signOut();
+  window._currentUser = null;
+  localStorage.removeItem('teacher_session');
+  document.getElementById('authOverlay').classList.remove('hidden');
+  document.getElementById('profileBtn').classList.remove('show');
+  closeProfile();
+};
+
+async function afterLogin() {
+  const { data: { user } } = await sb.auth.getUser();
+  if (!user) return;
+  const { data: profile } = await sb.from('profiles').select('*').eq('id', user.id).single();
+  window._currentUser = profile || { id: user.id, name: '老师', phone: user.email?.replace('@teacher.local',''), role: 'external', balance: 0, default_region: '', default_textbook: '', default_subject: '' };
+  localStorage.setItem('teacher_session', JSON.stringify(window._currentUser));
+  document.getElementById('authOverlay').classList.add('hidden');
+  document.getElementById('profileBtn').classList.add('show');
+  renderProfile();
+}
+
+// ========== Profile Panel ==========
+window.openProfile = async function() {
+  renderProfile();
+  await loadOrderHistory();
+  document.getElementById('profilePanel').classList.add('open');
+  document.getElementById('profileBackdrop').classList.add('open');
+};
+window.closeProfile = function() {
+  document.getElementById('profilePanel').classList.remove('open');
+  document.getElementById('profileBackdrop').classList.remove('open');
+};
+
+function renderProfile() {
+  const u = window._currentUser;
+  if (!u) return;
+  document.getElementById('profileAvatar').textContent = (u.name || '老')[0];
+  document.getElementById('profileName').textContent = u.name || '老师';
+  document.getElementById('profilePhone').textContent = u.phone || '';
+  const roleEl = document.getElementById('profileRole');
+  if (u.role === 'school') {
+    roleEl.textContent = '本校教师 · 免费'; roleEl.className = 'profile-role free';
+  } else {
+    roleEl.textContent = '外部教师 · 付费'; roleEl.className = 'profile-role paid';
+  }
+  const balEl = document.getElementById('profileBalance');
+  if (u.role === 'external') {
+    balEl.style.display = ''; document.getElementById('balanceAmount').textContent = u.balance || 0;
+  } else { balEl.style.display = 'none'; }
+  renderProfileInfo();
+}
+
+let profileEditing = false;
+function renderProfileInfo() {
+  const u = window._currentUser;
+  const area = document.getElementById('profileInfoArea');
+  const btn = document.getElementById('profileEditBtn');
+  btn.textContent = profileEditing ? '💾 保存' : '✏️ 编辑常用信息';
+  if (profileEditing) {
+    area.innerHTML = `
+      <div class="profile-field"><label>地区</label>
+        <select class="profile-edit-select" id="editRegion"><option value="">请选择</option>${regions.map(r=>`<option ${u.default_region===r?'selected':''}>${r}</option>`).join('')}</select></div>
+      <div class="profile-field"><label>教材版本</label>
+        <select class="profile-edit-select" id="editTextbook"><option value="">请选择</option>${textbookVersions.map(t=>`<option ${u.default_textbook===t?'selected':''}>${t}</option>`).join('')}</select></div>
+      <div class="profile-field"><label>常教学科</label>
+        <select class="profile-edit-select" id="editSubject"><option value="">请选择</option>${subjects.map(s=>`<option ${u.default_subject===s?'selected':''}>${s}</option>`).join('')}</select></div>
+    `;
+  } else {
+    area.innerHTML = `
+      <div class="profile-field"><label>地区</label><span class="value">${u.default_region || '未设置'}</span></div>
+      <div class="profile-field"><label>教材版本</label><span class="value">${u.default_textbook || '未设置'}</span></div>
+      <div class="profile-field"><label>常教学科</label><span class="value">${u.default_subject || '未设置'}</span></div>
+    `;
+  }
+}
+
+window.toggleProfileEdit = async function() {
+  if (!profileEditing) {
+    profileEditing = true; renderProfileInfo(); return;
+  }
+  const region = document.getElementById('editRegion').value;
+  const textbook = document.getElementById('editTextbook').value;
+  const subject = document.getElementById('editSubject').value;
+  const { error } = await sb.from('profiles').update({ default_region: region, default_textbook: textbook, default_subject: subject }).eq('id', window._currentUser.id);
+  if (error) { alert('保存失败: ' + error.message); return; }
+  window._currentUser.default_region = region;
+  window._currentUser.default_textbook = textbook;
+  window._currentUser.default_subject = subject;
+  localStorage.setItem('teacher_session', JSON.stringify(window._currentUser));
+  profileEditing = false; renderProfileInfo();
+};
+
+async function loadOrderHistory() {
+  const { data, error } = await sb.from('orders').select('*').eq('user_id', window._currentUser.id).order('created_at', { ascending: false }).limit(10);
+  const el = document.getElementById('profileHistory');
+  if (error || !data || data.length === 0) { el.innerHTML = '<div class="history-empty">暂无使用记录</div>'; return; }
+  const labels = { jiaoan:'生成教案', chujuan:'智能出卷', jianyi:'教学建议', deyu:'德育助手', jiaowu:'教务助手', xiaozhang:'校长小助手' };
+  el.innerHTML = data.map(o => {
+    const d = o.request_data || {};
+    const desc = d.subject || d.topic || d.description || '';
+    const time = o.created_at ? new Date(o.created_at).toLocaleString('zh-CN') : '';
+    return `<div class="history-item"><div class="h-type">${labels[o.service]||o.service}</div><div>${desc}</div><div class="h-time">${time} · ${o.status||'pending'}</div></div>`;
+  }).join('');
+}
+
+// ========== Recharge ==========
+let selectedRechargeCount = 0;
+window.selectRecharge = function(count) {
+  selectedRechargeCount = count;
+  document.querySelectorAll('.recharge-card').forEach(c => c.classList.remove('selected'));
+  document.querySelector(`.recharge-card[data-count="${count}"]`)?.classList.add('selected');
+  const prices = {1: 9.9, 12: 99, 99: 699};
+  const payArea = document.getElementById('rechargePayArea');
+  payArea.style.display = '';
+  document.getElementById('rechargeSummary').textContent = `已选：${count}次使用，共 ¥${prices[count]}`;
+};
+
+window.contactForPay = function() {
+  const prices = {1: 9.9, 12: 99, 99: 699};
+  alert(`请联系客服完成支付\n\n📧 邮箱：laoshizhushou@coze.email\n\n请备注：手机号 ${window._currentUser?.phone || ''}，套餐 ${selectedRechargeCount}次（¥${prices[selectedRechargeCount]}）\n\n支付确认后将为您充值。`);
+};
+
+// ========== Auto Login Check ==========
+(async function checkSession() {
+  const { data: { session } } = await sb.auth.getSession();
+  if (session) { await afterLogin(); }
+})();
+</script>
+
+<!-- PWA Service Worker Registration -->
 <script>
 (function() {
   'use strict';
-
-  // ====== Register Service Worker ======
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', function() {
       navigator.serviceWorker.register('./sw.js')
