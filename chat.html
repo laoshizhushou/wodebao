@@ -1639,11 +1639,13 @@ async function submitForm() {
     }
   } catch(e) { console.warn('FormSubmit failed:', e); }
 
-  // Save to DB
+  // Save to DB (will update with content after generation)
+  let _resultId = null;
   try {
-    await window._sb.from('generated_results').insert({
+    const { data: inserted } = await window._sb.from('generated_results').insert({
       user_id: window._currentUser?.id, service_type: data.service, form_data: data, status: 'pending'
-    });
+    }).select('id').single();
+    if (inserted) _resultId = inserted.id;
   } catch(e) { console.warn('DB save failed:', e); }
 
   // Deduct balance
@@ -1696,6 +1698,13 @@ async function submitForm() {
     resultDiv._dlFilename = dlFilename;
     resultDiv.dataset.filename = dlFilename;
     resultDiv.dataset.service = data.service;
+    // Update DB with generated content
+    if (_resultId && window._sb) {
+      window._sb.from('generated_results').update({
+        result_content: generatedContent, status: 'completed', completed_at: new Date().toISOString()
+      }).eq('id', _resultId).then(() => {}).catch(e => console.warn('DB update failed:', e));
+    }
+    resultDiv.dataset.resultId = _resultId || '';
     chatMessages.appendChild(resultDiv);
     scrollToBottom();
   }, delay);
@@ -1825,6 +1834,16 @@ function confirmGenerated(btn) {
   btn.textContent = '已确认';
   btn.disabled = true;
   btn.style.opacity = '0.6';
+  
+  // Update DB status to confirmed
+  const card = btn.closest('.generated-card');
+  const resultId = card ? card.dataset.resultId : null;
+  if (resultId && window._sb) {
+    window._sb.from('generated_results').update({
+      status: 'confirmed', confirmed_at: new Date().toISOString()
+    }).eq('id', resultId).then(() => {}).catch(e => console.warn('Confirm update failed:', e));
+  }
+  
   addBotMessage('内容已确认，您可以在个人中心的"生成结果"中查看历史记录。');
 }
 window.confirmGenerated = confirmGenerated;
