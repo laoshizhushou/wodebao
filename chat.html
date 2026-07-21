@@ -1698,6 +1698,7 @@ async function submitForm() {
     resultDiv._dlFilename = dlFilename;
     resultDiv.dataset.filename = dlFilename;
     resultDiv.dataset.service = data.service;
+    resultDiv.dataset.serviceType = data.service;
     // Update DB with generated content
     if (_resultId && window._sb) {
       window._sb.from('generated_results').update({
@@ -1725,10 +1726,23 @@ function openModifyInChat(btn) {
     return;
   }
   
+  // Save original content before first modify
+  if (!card.dataset.originalContent) {
+    card.dataset.originalContent = contentEl.innerHTML;
+  }
+  
+  // Save service type from the parent resultDiv if not already set
+  if (!card.dataset.service) {
+    const parentDiv = card.closest('.message');
+    if (parentDiv && parentDiv.dataset && parentDiv.dataset.serviceType) {
+      card.dataset.service = parentDiv.dataset.serviceType;
+    }
+  }
+  
   // Replace content with editable area and input
-  contentEl.innerHTML = '<div class="modify-area" contenteditable="true" style="border:1px solid #d1d5db;border-radius:6px;padding:10px;min-height:120px;font-size:14px;line-height:1.7;">' + contentEl.innerHTML + '</div>' +
+  contentEl.innerHTML = '<div class="modify-area" contenteditable="true" style="border:1px solid #d1d5db;border-radius:6px;padding:10px;min-height:120px;font-size:14px;line-height:1.7;">' + (card.dataset.originalContent || '') + '</div>' +
     '<div style="margin-top:10px;display:flex;gap:8px;">' +
-    '<input type="text" id="modifyChatInput" placeholder="请描述需要修改的内容..." style="flex:1;padding:8px 12px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;" onkeydown="if(event.key===\'Enter\'){event.preventDefault();sendModifyInChat(this);}"/>' +
+    '<input type="text" placeholder="请描述需要修改的内容..." style="flex:1;padding:8px 12px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;" onkeydown="if(event.key===\'Enter\'){event.preventDefault();sendModifyInChat(this);}"/>' +
     '<button onclick="sendModifyInChat(this.previousElementSibling)" style="padding:8px 14px;background:#2563eb;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:13px;">发送</button>' +
     '</div>';
   
@@ -1751,21 +1765,25 @@ function sendModifyInChat(input) {
   modifyArea.innerHTML = '<div style="color:#6b7280;font-style:italic;padding:10px;">正在提交修改意见...</div>';
   input.disabled = true;
   
-  // Collect original content (strip HTML tags for plain text)
-  const originalText = (card.dataset.originalContent || contentEl.innerText || '').replace(/<[^>]*>/g, '\n').replace(/\n+/g, '\n').trim();
+  // Collect original content from saved data
+  const originalText = (card.dataset.originalContent || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+  
+  // Get service type label
+  const serviceType = card.dataset.service || '';
+  const serviceLabel = (typeof SERVICE_LABELS !== 'undefined' && SERVICE_LABELS[serviceType]) ? SERVICE_LABELS[serviceType] : (serviceType || '未知');
   
   // Send to FormSubmit so agent receives it
-  const serviceType = card.dataset.service || 'unknown';
   fetch('https://formsubmit.co/ajax/laoshizhushou@coze.email', {
     method: 'POST',
     headers: {'Content-Type': 'application/json', 'Accept': 'application/json'},
     body: JSON.stringify({
-      _subject: '【修改请求】第' + (modifyCount+1) + '次 - ' + (SERVICE_LABELS ? SERVICE_LABELS[serviceType] || serviceType : serviceType),
+      _subject: '【修改请求】第' + modifyCount + '次 - ' + serviceLabel,
       _template: 'table',
-      服务类型: SERVICE_LABELS && SERVICE_LABELS[serviceType] ? SERVICE_LABELS[serviceType] : serviceType,
+      服务类型: serviceLabel,
       修改意见: msg,
       原始内容: originalText.substring(0, 2000),
-      第几次修改: modifyCount + 1,
+      第几次修改: modifyCount,
+      用户手机: (window._currentUser && window._currentUser.phone) || '未登录',
       提交时间: new Date().toLocaleString('zh-CN')
     })
   }).then(r => r.json()).then(data => {
@@ -2249,10 +2267,23 @@ function openModifyInChat(btn) {
     return;
   }
   
+  // Save original content before first modify
+  if (!card.dataset.originalContent) {
+    card.dataset.originalContent = contentEl.innerHTML;
+  }
+  
+  // Save service type from the parent resultDiv if not already set
+  if (!card.dataset.service) {
+    const parentDiv = card.closest('.message');
+    if (parentDiv && parentDiv.dataset && parentDiv.dataset.serviceType) {
+      card.dataset.service = parentDiv.dataset.serviceType;
+    }
+  }
+  
   // Replace content with editable area and input
-  contentEl.innerHTML = '<div class="modify-area" contenteditable="true" style="border:1px solid #d1d5db;border-radius:6px;padding:10px;min-height:120px;font-size:14px;line-height:1.7;">' + contentEl.innerHTML + '</div>' +
+  contentEl.innerHTML = '<div class="modify-area" contenteditable="true" style="border:1px solid #d1d5db;border-radius:6px;padding:10px;min-height:120px;font-size:14px;line-height:1.7;">' + (card.dataset.originalContent || '') + '</div>' +
     '<div style="margin-top:10px;display:flex;gap:8px;">' +
-    '<input type="text" id="modifyChatInput" placeholder="请描述需要修改的内容..." style="flex:1;padding:8px 12px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;" onkeydown="if(event.key===\'Enter\'){event.preventDefault();sendModifyInChat(this);}"/>' +
+    '<input type="text" placeholder="请描述需要修改的内容..." style="flex:1;padding:8px 12px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;" onkeydown="if(event.key===\'Enter\'){event.preventDefault();sendModifyInChat(this);}"/>' +
     '<button onclick="sendModifyInChat(this.previousElementSibling)" style="padding:8px 14px;background:#2563eb;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:13px;">发送</button>' +
     '</div>';
   
@@ -2275,21 +2306,25 @@ function sendModifyInChat(input) {
   modifyArea.innerHTML = '<div style="color:#6b7280;font-style:italic;padding:10px;">正在提交修改意见...</div>';
   input.disabled = true;
   
-  // Collect original content (strip HTML tags for plain text)
-  const originalText = (card.dataset.originalContent || contentEl.innerText || '').replace(/<[^>]*>/g, '\n').replace(/\n+/g, '\n').trim();
+  // Collect original content from saved data
+  const originalText = (card.dataset.originalContent || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+  
+  // Get service type label
+  const serviceType = card.dataset.service || '';
+  const serviceLabel = (typeof SERVICE_LABELS !== 'undefined' && SERVICE_LABELS[serviceType]) ? SERVICE_LABELS[serviceType] : (serviceType || '未知');
   
   // Send to FormSubmit so agent receives it
-  const serviceType = card.dataset.service || 'unknown';
   fetch('https://formsubmit.co/ajax/laoshizhushou@coze.email', {
     method: 'POST',
     headers: {'Content-Type': 'application/json', 'Accept': 'application/json'},
     body: JSON.stringify({
-      _subject: '【修改请求】第' + (modifyCount+1) + '次 - ' + (SERVICE_LABELS ? SERVICE_LABELS[serviceType] || serviceType : serviceType),
+      _subject: '【修改请求】第' + modifyCount + '次 - ' + serviceLabel,
       _template: 'table',
-      服务类型: SERVICE_LABELS && SERVICE_LABELS[serviceType] ? SERVICE_LABELS[serviceType] : serviceType,
+      服务类型: serviceLabel,
       修改意见: msg,
       原始内容: originalText.substring(0, 2000),
-      第几次修改: modifyCount + 1,
+      第几次修改: modifyCount,
+      用户手机: (window._currentUser && window._currentUser.phone) || '未登录',
       提交时间: new Date().toLocaleString('zh-CN')
     })
   }).then(r => r.json()).then(data => {
