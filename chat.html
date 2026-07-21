@@ -1886,6 +1886,9 @@ function renderProfile() {
     if (u.balance <= 2 && u.balance > 0) { balEl.innerHTML = '剩余：<span style="color:#d97706">' + u.balance + '</span> 次 <span style="color:#d97706;font-size:11px;">余额不足</span>'; }
     if (u.balance <= 0) { balEl.innerHTML = '剩余：<span style="color:#ef4444">0</span> <span style="color:#ef4444;font-size:11px;">已用完</span>'; }
   } else { balEl.style.display = 'none'; }
+  // Show recharge section for external teachers
+  const rechargeSec = document.getElementById('rechargeSection');
+  if (u.role === 'external') { rechargeSec.style.display = ''; } else { rechargeSec.style.display = 'none'; }
   renderProfileInfo();
 }
 
