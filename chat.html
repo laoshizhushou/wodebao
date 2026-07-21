@@ -1586,6 +1586,15 @@ function getDownloadFilename(service, data) {
 
 // ========== Form Submission ==========
 async function submitForm() {
+  // Prevent duplicate submissions within 60 seconds
+  const lastSubmit = parseInt(sessionStorage.getItem('last_submit_time') || '0');
+  const now = Date.now();
+  if (now - lastSubmit < 60000) {
+    alert('请勿重复提交，请等待' + Math.ceil((60000 - (now - lastSubmit)) / 1000) + '秒后再试');
+    return;
+  }
+  sessionStorage.setItem('last_submit_time', String(now));
+
   const data = collectFormData();
   if (!validateForm(data)) return;
 
