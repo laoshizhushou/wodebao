@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>老师的小能手 - AI教学助手</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f8f9fa;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        /* 导航栏 */
+        .navbar {
+            background: white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .navbar .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+        }
+        
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: #ff6b35;
+        }
+        
+        .nav-links {
+            display: flex;
+            gap: 30px;
+            list-style: none;
+        }
+        
+        .nav-links a {
+            text-decoration: none;
+            color: #555;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+        
+        .nav-links a:hover {
+            color: #ff6b35;
+        }
+        
+        /* 主视觉区 */
+        .hero {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 100px 0;
+            text-align: center;
+        }
+        
+        .hero h1 {
+            font-size: 48px;
+            margin-bottom: 20px;
+            animation: fadeInUp 0.8s;
+        }
+        
+        .hero p {
+            font-size: 20px;
+            margin-bottom: 40px;
+            opacity: 0.95;
+            animation: fadeInUp 1s;
+        }
+        
+        .cta-button {
+            display: inline-block;
+            background: #ff6b35;
+            color: white;
+            padding: 15px 40px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-size: 18px;
+            font-weight: bold;
+            transition: transform 0.3s, box-shadow 0.3s;
+            animation: fadeInUp 1.2s;
+        }
+        
+        .cta-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(255,107,53,0.4);
+        }
+        
+        /* 功能展示区 */
+        .features {
+            padding: 80px 0;
+            background: white;
+        }
+        
+        .section-title {
+            text-align: center;
+            font-size: 36px;
+            margin-bottom: 60px;
+            color: #333;
+        }
+        
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 40px;
+        }
+        
+        .feature-card {
+            background: #f8f9fa;
+            padding: 40px 30px;
+            border-radius: 15px;
+            text-align: center;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.1);
+        }
+        
+        .feature-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            font-size: 36px;
+        }
+        
+        .feature-card h3 {
+            font-size: 22px;
+            margin-bottom: 15px;
+            color: #333;
+        }
+        
+        .feature-card p {
+            color: #666;
+            line-height: 1.8;
+        }
+        
+        /* 案例展示 */
+        .demo {
+            padding: 80px 0;
+            background: #f8f9fa;
+        }
+        
+        .demo-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            align-items: center;
+        }
+        
+        .demo-text h3 {
+            font-size: 28px;
+            margin-bottom: 20px;
+            color: #333;
+        }
+        
+        .demo-text p {
+            color: #666;
+            margin-bottom: 15px;
+            line-height: 1.8;
+        }
+        
+        .demo-image {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        
+        .demo-image pre {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            overflow-x: auto;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+        
+        /* 定价区 */
+        .pricing {
+            padding: 80px 0;
+            background: white;
+        }
+        
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        
+        .pricing-card {
+            background: #f8f9fa;
+            padding: 40px;
+            border-radius: 15px;
+            text-align: center;
+            position: relative;
+            transition: transform 0.3s;
+        }
+        
+        .pricing-card.featured {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            transform: scale(1.05);
+        }
+        
+        .pricing-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .pricing-card.featured:hover {
+            transform: scale(1.05) translateY(-5px);
+        }
+        
+        .pricing-badge {
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #ff6b35;
+            color: white;
+            padding: 5px 20px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        
+        .pricing-card h3 {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+        
+        .pricing-price {
+            font-size: 48px;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+        
+        .pricing-price span {
+            font-size: 18px;
+            font-weight: normal;
+        }
+        
+        .pricing-features {
+            list-style: none;
+            margin: 30px 0;
+            text-align: left;
+        }
+        
+        .pricing-features li {
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(0,0,0,0.1);
+        }
+        
+        .pricing-card.featured .pricing-features li {
+            border-bottom-color: rgba(255,255,255,0.2);
+        }
+        
+        .pricing-features li:before {
+            content: "✓ ";
+            color: #ff6b35;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        
+        .pricing-card.featured .pricing-features li:before {
+            color: #ffd700;
+        }
+        
+        /* 联系我们 */
+        .contact {
+            padding: 80px 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-align: center;
+        }
+        
+        .contact h2 {
+            font-size: 36px;
+            margin-bottom: 20px;
+        }
+        
+        .contact p {
+            font-size: 18px;
+            margin-bottom: 40px;
+            opacity: 0.95;
+        }
+        
+        .qr-code {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            display: inline-block;
+            margin-bottom: 20px;
+        }
+        
+        .qr-code img {
+            width: 200px;
+            height: 200px;
+            display: block;
+        }
+        
+        .qr-place
+holder {
+            width: 200px;
+            height: 200px;
+            background: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #999;
+            font-size: 14px;
+        }
+        
+        /* FAQ */
+        .faq {
+            padding: 80px 0;
+            background: white;
+        }
+        
+        .faq-item {
+            max-width: 800px;
+            margin: 0 auto 30px;
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 10px;
+        }
+        
+        .faq-item h3 {
+            font-size: 20px;
+            margin-bottom: 15px;
+            color: #333;
+        }
+        
+        .faq-item p {
+            color: #666;
+            line-height: 1.8;
+        }
+        
+        /* 页脚 */
+        .footer {
+            background: #333;
+            color: white;
+            text-align: center;
+            padding: 30px 0;
+        }
+        
+        .footer p {
+            opacity: 0.8;
+        }
+        
+        /* 动画 */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* 响应式 */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 32px;
+            }
+            
+            .hero p {
+                font-size: 16px;
+            }
+            
+            .nav-links {
+                display: none;
+            }
+            
+            .demo-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .pricing-card.featured {
+                transform: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="logo">📚 老师的小能手</div>
+            <ul class="nav-links">
+                <li><a href="#features">核心功能</a></li>
+                <li><a href="#demo">效果演示</a></li>
+                <li><a href="#pricing">服务定价</a></li>
+                <li><a href="#contact">联系我们</a></li>
+            </ul>
+        </div>
+    </nav>
+    
+    <!-- 主视觉区 -->
+    <section class="hero">
+        <div class="container">
+            <h1>AI帮老师减负增效</h1>
+            <p>一键生成教案、智能出题、教学建议<br>让备课从2小时缩短到10分钟</p>
+            <a href="#contact" class="cta-button">立即体验</a>
+        </div>
+    </section>
+    
+    <!-- 功能展示 -->
+    <section id="features" class="features">
+        <div class="container">
+            <h2 class="section-title">四大核心功能</h2>
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">📝</div>
+                    <h3>教案自动生成</h3>
+                    <p>输入学科、年级、课题，AI自动生成完整教案，包含教学目标、教学过程、板书设计等，可直接使用。</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📊</div>
+                    <h3>智能出题组卷</h3>
+                    <p>按知识点、难度、题型智能出题，自动生成试卷和答题卡，含详细解析和评分标准。</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">💡</div>
+                    <h3>教学建议</h3>
+                    <p>针对学情分析、课堂管理、教学方法等提供专业建议，结合教育理论和一线经验。</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🎯</div>
+                    <h3>德育助手</h3>
+                    <p>班会设计、德育活动方案、学生评语、家校沟通话术，全方位支持班主任工作。</p>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- 效果演示 -->
+    <section id="demo" class="demo">
+        <div class="container">
+            <h2 class="section-title">效果展示</h2>
+            <div class="demo-content">
+                <div class="demo-text">
+                    <h3>10秒生成完整教案</h3>
+                    <p><strong>输入：</strong>初一数学，有理数的加法</p>
+                    <p><strong>输出：</strong>包含教学目标、重难点、教学过程、板书设计的完整教案，可直接打印使用。</p>
+                    <p><strong>节省时间：</strong>从2小时备课 → 10分钟检查修改</p>
+                    <p><strong>质量保障：</strong>符合课程标准，知识点准确，可直接用于教学。</p>
+                </div>
+                <div class="demo-image">
+                    <pre>
+# 《有理数的加法》教学设计
+
+## 教学目标
+### 知识与技能
+- 理解有理数加法的意义
+- 掌握有理数加法法则
+
+### 过程与方法
+- 经历探索有理数加法法则的过程
+- 培养分类讨论的数学思想
+
+## 教学过程
+### 一、导入新课（5分钟）
+情境：操场跑道问题...
+
+### 二、新知讲授（20分钟）
+活动1：同号两数相加...
+活动2：异号两数相加...
+
+### 三、巩固练习（12分钟）
+...
+                    </pre>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- 定价 -->
+    <section id="pricing" class="pricing">
+        <div class="container">
+            <h2 class="section-title">服务定价</h2>
+            <div class="pricing-grid">
+                <div class="pricing-card">
+                    <h3>单次体验</h3>
+                    <div class="pricing-price">¥9.9<span>/次</span></div>
+                    <ul class="pricing-features">
+                        <li>单次教案生成</li>
+                        <li>单次试卷生成</li>
+                        <li>含详细解析</li>
+                        <li>永久保存</li>
+                    </ul>
+                    <a href="#contact" class="cta-button">立即使用</a>
+                </div>
+                <div class="pricing-card featured">
+                    <div class="pricing-badge">推荐</div>
+                    <h3>月度会员</h3>
+                    <div class="pricing-price">¥99<span>/月</span></div>
+                    <ul class="pricing-features">
+                        <li>不限次数使用</li>
+                        <li>全部功能开放</li>
+                        <li>优先响应</li>
+                        <li>专属客服</li>
+                        <li>教学建议无限</li>
+                    </ul>
+                    <a href="#contact" class="cta-button">立即开通</a>
+                </div>
+                <div class="pricing-card">
+                    <h3>年度会员</h3>
+                    <div class="pricing-price">¥699<span>/年</span></div>
+                    <ul class="pricing-features">
+                        <li>不限次数使用</li>
+                        <li>全部功能开放</li>
+                        <li>优先响应</li>
+                        <li>专属客服</li>
+                        <li>节省589元</li>
+                    </ul>
+                    <a href="#contact" class="cta-button">立即开通</a>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- 联系我们 -->
+    <section id="contact" class="contact">
+        <div class="container">
+            <h2>立即体验</h2>
+            <p>扫码添加微信，发送"试用"即可免费体验一次</p>
+            <div class="qr-code">
+                <div class="qr-placeholder">
+                    <img src="wechat-qr.png" alt="微信二维码" style="width: 200px; height: 200px;">
+                </div>
+            </div>
+            <p style="font-size: 14px; opacity: 0.8;">添加微信后，发送需求即可快速获得教案/试卷</p>
+        </div>
+    </section>
+    
+    <!-- FAQ -->
+    <section class="faq">
+        <div class="container">
+            <h2 class="section-title">常见问题</h2>
+            <div class="faq-item">
+                <h3>Q: 生成的教案质量如何？</h3>
+                <p>A: 我们的AI基于海量优质教案数据训练，生成的教案符合课程标准，知识点准确，结构完整。建议老师根据自己的教学风格和学生情况稍作调整。</p>
+            </div>
+            <div class="faq-item">
+                <h3>Q: 支持哪些学科和年级？</h3>
+                <p>A: 目前支持小学、初中、高中全学科，包括语文、数学、英语、物理、化学、生物、历史、地理等。</p>
+            </div>
+            <div class="faq-item">
+                <h3>Q: 如何收费？</h3>
+                <p>A: 支持单次付费（9.9元/次）和会员制（月卡99元，年卡699元），会员不限次数使用所有功能。</p>
+            </div>
+            <div class="faq-item">
+                <h3>Q: 生成一份教案需要多久？</h3>
+                <p>A: 通常10-30秒即可生成完整教案，试卷根据题量不同，1-3分钟完成。</p>
+            </div>
+            <div class="faq-item">
+                <h3>Q: 可以定制特殊需求吗？</h3>
+                <p>A: 可以！添加微信后说明具体需求，我们可以为您定制专属内容。</p>
+            </div>
+        </div>
+    </section>
+    
+    <!-- 页脚 -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2024 老师的小能手 | AI驱动的教学助手</p>
+            <p style="margin-top: 10px; font-size: 14px;">让每一位老师都能轻松备课、高效教学</p>
+        </div>
+    </footer>
+    
+    <script>
+        // 平滑滚动
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+        
+        // 滚动动画
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+        
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.animation = 'fadeInUp 0.8s';
+                }
+            });
+        }, observerOptions);
+        
+        document.querySelectorAll('.feature-card, .pricing-card, .faq-item').forEach(el => {
+            observer.observe(el);
+        });
+    </script>
+</body>
+</html>
