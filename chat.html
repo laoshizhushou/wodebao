@@ -1874,15 +1874,15 @@ window.closeProfile = function() {
 function renderProfile() {
   const u = window._currentUser;
   if (!u) return;
-  document.getElementById('profileAvatar').textContent = (u.name || '师')[0];
-  document.getElementById('profileName').textContent = u.name || '老师';
-  document.getElementById('profilePhone').textContent = u.phone || '';
+  const avatarEl = document.getElementById('profileAvatar'); if (avatarEl) avatarEl.textContent = (u.name || '师')[0];
+  const nameEl = document.getElementById('profileName'); if (nameEl) nameEl.textContent = u.name || '老师';
+  const phoneEl = document.getElementById('profilePhone'); if (phoneEl) phoneEl.textContent = u.phone || '';
   const roleEl = document.getElementById('profileRole');
   if (u.role === 'school') { roleEl.textContent = '本校教师'; roleEl.className = 'profile-role free'; }
   else { roleEl.textContent = '外部教师'; roleEl.className = 'profile-role paid'; }
   const balEl = document.getElementById('profileBalance');
   if (u.role === 'external') {
-    balEl.style.display = ''; document.getElementById('balanceAmount').textContent = u.balance || 0;
+    balEl.style.display = ''; const balAmtEl = document.getElementById('balanceAmount'); if (balAmtEl) balAmtEl.textContent = u.balance || 0;
     if (u.balance <= 2 && u.balance > 0) { balEl.innerHTML = '剩余：<span style="color:#d97706">' + u.balance + '</span> 次 <span style="color:#d97706;font-size:11px;">余额不足</span>'; }
     if (u.balance <= 0) { balEl.innerHTML = '剩余：<span style="color:#ef4444">0</span> <span style="color:#ef4444;font-size:11px;">已用完</span>'; }
   } else { balEl.style.display = 'none'; }
