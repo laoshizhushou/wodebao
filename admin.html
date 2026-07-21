@@ -336,7 +336,8 @@ function renderTeachers() {
         <button class="act-btn add" onclick="addBalance('${t.id}',5)">+5</button>
         <button class="act-btn add" onclick="addBalance('${t.id}',10)">+10</button>
         <button class="act-btn add" onclick="addBalance('${t.id}',50)">+50</button>
-        <button class="act-btn role" onclick="toggleRole('${t.id}','${t.role}')">${t.role==='school'?'→付费':'→免费'}</button>
+        <button class="act-btn role" onclick="setRole('${t.id}','school')" style="${t.role==='school'?'font-weight:700;opacity:0.6':''}">免费</button>
+        <button class="act-btn role" onclick="setRole('${t.id}','external')" style="${t.role==='external'?'font-weight:700;opacity:0.6':''}">付费</button>
       </td>
     </tr>`;
   }).join('');
