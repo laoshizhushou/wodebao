@@ -121,6 +121,12 @@
             gap: 40px;
         }
         
+        .feature-card-link {
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+        
         .feature-card {
             background: #f8f9fa;
             padding: 40px 30px;
@@ -323,8 +329,7 @@
             display: block;
         }
         
-        .qr-place
-holder {
+        .qr-placeholder {
             width: 200px;
             height: 200px;
             background: #f0f0f0;
@@ -417,7 +422,7 @@ holder {
                 <li><a href="#features">核心功能</a></li>
                 <li><a href="#demo">效果演示</a></li>
                 <li><a href="#pricing">服务定价</a></li>
-                <li><a href="#contact">联系我们</a></li>
+                <li><a href="./chat.html">立即使用</a></li>
             </ul>
         </div>
     </nav>
@@ -427,35 +432,57 @@ holder {
         <div class="container">
             <h1>AI帮老师减负增效</h1>
             <p>一键生成教案、智能出题、教学建议<br>让备课从2小时缩短到10分钟</p>
-            <a href="#contact" class="cta-button">立即体验</a>
+            <a href="./chat.html" class="cta-button">立即体验</a>
         </div>
     </section>
     
     <!-- 功能展示 -->
     <section id="features" class="features">
         <div class="container">
-            <h2 class="section-title">四大核心功能</h2>
+            <h2 class="section-title">六大核心功能</h2>
             <div class="feature-grid">
-                <div class="feature-card">
-                    <div class="feature-icon">📝</div>
-                    <h3>教案自动生成</h3>
-                    <p>输入学科、年级、课题，AI自动生成完整教案，包含教学目标、教学过程、板书设计等，可直接使用。</p>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon">📊</div>
-                    <h3>智能出题组卷</h3>
-                    <p>按知识点、难度、题型智能出题，自动生成试卷和答题卡，含详细解析和评分标准。</p>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon">💡</div>
-                    <h3>教学建议</h3>
-                    <p>针对学情分析、课堂管理、教学方法等提供专业建议，结合教育理论和一线经验。</p>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon">🎯</div>
-                    <h3>德育助手</h3>
-                    <p>班会设计、德育活动方案、学生评语、家校沟通话术，全方位支持班主任工作。</p>
-                </div>
+                <a href="./chat.html?service=jiaoan" class="feature-card-link">
+                    <div class="feature-card">
+                        <div class="feature-icon">📝</div>
+                        <h3>教案自动生成</h3>
+                        <p>输入学科、年级、课题，AI自动生成完整教案，包含教学目标、教学过程、板书设计等，可直接使用。</p>
+                    </div>
+                </a>
+                <a href="./chat.html?service=chujuan" class="feature-card-link">
+                    <div class="feature-card">
+                        <div class="feature-icon">📊</div>
+                        <h3>智能出题组卷</h3>
+                        <p>按知识点、难度、题型智能出题，自动生成试卷和答题卡，含详细解析和评分标准。</p>
+                    </div>
+                </a>
+                <a href="./chat.html?service=jianyi" class="feature-card-link">
+                    <div class="feature-card">
+                        <div class="feature-icon">💡</div>
+                        <h3>教学建议</h3>
+                        <p>针对学情分析、课堂管理、教学方法等提供专业建议，结合教育理论和一线经验。</p>
+                    </div>
+                </a>
+                <a href="./chat.html?service=deyu" class="feature-card-link">
+                    <div class="feature-card">
+                        <div class="feature-icon">🌟</div>
+                        <h3>德育助手</h3>
+                        <p>班会设计、德育活动方案、学生评语、家校沟通话术，全方位支持班主任工作。</p>
+                    </div>
+                </a>
+                <a href="./chat.html?service=jiaowu" class="feature-card-link">
+                    <div class="feature-card">
+                        <div class="feature-icon">📋</div>
+                        <h3>教务助手</h3>
+                        <p>排课调课、成绩分析、通知公告、学期计划、会议纪要、考勤管理，一站式教务处理。</p>
+                    </div>
+                </a>
+                <a href="./chat.html?service=xiaozhang" class="feature-card-link">
+                    <div class="feature-card">
+                        <div class="feature-icon">👔</div>
+                        <h3>校长小助手</h3>
+                        <p>公文写作、会议讲话、学校规划、制度方案、工作报告，支持上传附件智能处理。</p>
+                    </div>
+                </a>
             </div>
         </div>
     </section>
@@ -515,7 +542,7 @@ holder {
                         <li>含详细解析</li>
                         <li>永久保存</li>
                     </ul>
-                    <a href="#contact" class="cta-button">立即使用</a>
+                    <a href="./chat.html" class="cta-button">立即使用</a>
                 </div>
                 <div class="pricing-card featured">
                     <div class="pricing-badge">推荐</div>
@@ -528,7 +555,7 @@ holder {
                         <li>专属客服</li>
                         <li>教学建议无限</li>
                     </ul>
-                    <a href="#contact" class="cta-button">立即开通</a>
+                    <a href="./chat.html" class="cta-button">立即开通</a>
                 </div>
                 <div class="pricing-card">
                     <h3>年度会员</h3>
@@ -540,23 +567,21 @@ holder {
                         <li>专属客服</li>
                         <li>节省589元</li>
                     </ul>
-                    <a href="#contact" class="cta-button">立即开通</a>
+                    <a href="./chat.html" class="cta-button">立即开通</a>
                 </div>
             </div>
         </div>
     </section>
     
-    <!-- 联系我们 -->
+    <!-- 立即体验 -->
     <section id="contact" class="contact">
         <div class="container">
             <h2>立即体验</h2>
-            <p>扫码添加微信，发送"试用"即可免费体验一次</p>
-            <div class="qr-code">
-                <div class="qr-placeholder">
-                    <img src="wechat-qr.png" alt="微信二维码" style="width: 200px; height: 200px;">
-                </div>
+            <p>点击下方按钮，填写需求即可快速获得教案/试卷</p>
+            <div style="margin-top:30px;">
+                <a href="./chat.html" class="cta-button">📱 打开AI助手</a>
             </div>
-            <p style="font-size: 14px; opacity: 0.8;">添加微信后，发送需求即可快速获得教案/试卷</p>
+            <p style="font-size: 14px; opacity: 0.8; margin-top:20px;">提交需求后，我们会在第一时间为您处理</p>
         </div>
     </section>
     
@@ -582,7 +607,7 @@ holder {
             </div>
             <div class="faq-item">
                 <h3>Q: 可以定制特殊需求吗？</h3>
-                <p>A: 可以！添加微信后说明具体需求，我们可以为您定制专属内容。</p>
+                <p>A: 可以！提交需求时说明具体情况，我们可以为您定制专属内容。</p>
             </div>
         </div>
     </section>
