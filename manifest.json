@@ -1,0 +1,24 @@
+{
+  "name": "老师的小能手",
+  "short_name": "小能手",
+  "description": "AI智能教育助手，一键生成教案、智能出卷",
+  "start_url": "./chat.html",
+  "display": "standalone",
+  "background_color": "#e0f7fa",
+  "theme_color": "#00897B",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "./icon-192.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "./icon-512.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
