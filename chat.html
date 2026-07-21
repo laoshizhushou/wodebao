@@ -1590,6 +1590,9 @@ function downloadContent(content, filename) {
   }
 })();
 </script>
+<script>
+if ('serviceWorker' in navigator) { navigator.serviceWorker.register('./sw.js').catch(function(){}); }
+</script>
 </body></html>';
   
   try {
@@ -2634,6 +2637,9 @@ window.updateBalanceDisplay = updateBalanceDisplay;
     }, 3000);
   }
 })();
+</script>
+<script>
+if ('serviceWorker' in navigator) { navigator.serviceWorker.register('./sw.js').catch(function(){}); }
 </script>
 </body>
 </html>
