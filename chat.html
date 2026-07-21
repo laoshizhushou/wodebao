@@ -1695,6 +1695,7 @@ async function submitForm() {
     resultDiv._generatedContent = generatedContent;
     resultDiv._dlFilename = dlFilename;
     resultDiv.dataset.filename = dlFilename;
+    resultDiv.dataset.service = data.service;
     chatMessages.appendChild(resultDiv);
     scrollToBottom();
   }, delay);
@@ -1735,20 +1736,38 @@ function sendModifyInChat(input) {
   const modifyArea = contentEl.querySelector('.modify-area');
   if (!modifyArea) return;
   
-  // Simulate AI modification (replace content based on user input)
-  modifyArea.innerHTML = '<div style="color:#6b7280;font-style:italic;padding:10px;">正在根据您的意见修改...</div>';
+  const modifyCount = parseInt(card.dataset.modifyCount || '0');
   
-  setTimeout(() => {
-    const originalContent = card.dataset.originalContent || modifyArea.innerHTML;
-    if (!card.dataset.originalContent) card.dataset.originalContent = originalContent;
-    
-    // Simple modification simulation
-    modifyArea.innerHTML = originalContent + 
-      '<div style="margin-top:12px;padding-top:10px;border-top:1px dashed #d1d5db;color:#2563eb;">' +
-      '<strong>[已修改]</strong> 已根据您的意见"' + msg + '"进行调整。如需继续修改请继续描述，满意后点击"完成修改"。</div>';
-  }, 1500);
+  // Show sending status
+  modifyArea.innerHTML = '<div style="color:#6b7280;font-style:italic;padding:10px;">正在提交修改意见...</div>';
+  input.disabled = true;
   
-  input.value = '';
+  // Collect original content (strip HTML tags for plain text)
+  const originalText = (card.dataset.originalContent || contentEl.innerText || '').replace(/<[^>]*>/g, '\n').replace(/\n+/g, '\n').trim();
+  
+  // Send to FormSubmit so agent receives it
+  const serviceType = card.dataset.service || 'unknown';
+  fetch('https://formsubmit.co/ajax/laoshizhushou@coze.email', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json', 'Accept': 'application/json'},
+    body: JSON.stringify({
+      _subject: '【修改请求】第' + (modifyCount+1) + '次 - ' + (SERVICE_LABELS ? SERVICE_LABELS[serviceType] || serviceType : serviceType),
+      _template: 'table',
+      服务类型: SERVICE_LABELS && SERVICE_LABELS[serviceType] ? SERVICE_LABELS[serviceType] : serviceType,
+      修改意见: msg,
+      原始内容: originalText.substring(0, 2000),
+      第几次修改: modifyCount + 1,
+      提交时间: new Date().toLocaleString('zh-CN')
+    })
+  }).then(r => r.json()).then(data => {
+    if (data.success) {
+      modifyArea.innerHTML = '<div style="color:#059669;padding:10px;">✅ 修改意见已提交，AI助手收到后会将修改后的内容发回。请留意通知。</div>';
+    } else {
+      modifyArea.innerHTML = '<div style="color:#dc2626;padding:10px;">提交失败，请重试或直接联系管理员。</div>';
+    }
+  }).catch(err => {
+    modifyArea.innerHTML = '<div style="color:#dc2626;padding:10px;">提交失败：' + err.message + '</div>';
+  });
 }
 
 function confirmModifyInChat(btn) {
@@ -2231,20 +2250,38 @@ function sendModifyInChat(input) {
   const modifyArea = contentEl.querySelector('.modify-area');
   if (!modifyArea) return;
   
-  // Simulate AI modification (replace content based on user input)
-  modifyArea.innerHTML = '<div style="color:#6b7280;font-style:italic;padding:10px;">正在根据您的意见修改...</div>';
+  const modifyCount = parseInt(card.dataset.modifyCount || '0');
   
-  setTimeout(() => {
-    const originalContent = card.dataset.originalContent || modifyArea.innerHTML;
-    if (!card.dataset.originalContent) card.dataset.originalContent = originalContent;
-    
-    // Simple modification simulation
-    modifyArea.innerHTML = originalContent + 
-      '<div style="margin-top:12px;padding-top:10px;border-top:1px dashed #d1d5db;color:#2563eb;">' +
-      '<strong>[已修改]</strong> 已根据您的意见"' + msg + '"进行调整。如需继续修改请继续描述，满意后点击"完成修改"。</div>';
-  }, 1500);
+  // Show sending status
+  modifyArea.innerHTML = '<div style="color:#6b7280;font-style:italic;padding:10px;">正在提交修改意见...</div>';
+  input.disabled = true;
   
-  input.value = '';
+  // Collect original content (strip HTML tags for plain text)
+  const originalText = (card.dataset.originalContent || contentEl.innerText || '').replace(/<[^>]*>/g, '\n').replace(/\n+/g, '\n').trim();
+  
+  // Send to FormSubmit so agent receives it
+  const serviceType = card.dataset.service || 'unknown';
+  fetch('https://formsubmit.co/ajax/laoshizhushou@coze.email', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json', 'Accept': 'application/json'},
+    body: JSON.stringify({
+      _subject: '【修改请求】第' + (modifyCount+1) + '次 - ' + (SERVICE_LABELS ? SERVICE_LABELS[serviceType] || serviceType : serviceType),
+      _template: 'table',
+      服务类型: SERVICE_LABELS && SERVICE_LABELS[serviceType] ? SERVICE_LABELS[serviceType] : serviceType,
+      修改意见: msg,
+      原始内容: originalText.substring(0, 2000),
+      第几次修改: modifyCount + 1,
+      提交时间: new Date().toLocaleString('zh-CN')
+    })
+  }).then(r => r.json()).then(data => {
+    if (data.success) {
+      modifyArea.innerHTML = '<div style="color:#059669;padding:10px;">✅ 修改意见已提交，AI助手收到后会将修改后的内容发回。请留意通知。</div>';
+    } else {
+      modifyArea.innerHTML = '<div style="color:#dc2626;padding:10px;">提交失败，请重试或直接联系管理员。</div>';
+    }
+  }).catch(err => {
+    modifyArea.innerHTML = '<div style="color:#dc2626;padding:10px;">提交失败：' + err.message + '</div>';
+  });
 }
 
 function confirmModifyInChat(btn) {
