@@ -53,7 +53,7 @@ body {
 }
 
 /* Stats Cards */
-.stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 20px; }
+.stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; }
 .stat-card {
   background: rgba(255,255,255,0.9); border-radius: 12px; padding: 16px; text-align: center;
   box-shadow: 0 2px 10px rgba(0,0,0,0.05);
@@ -160,12 +160,16 @@ tr:hover { background: #f9f9f9; }
     <div class="stat-card"><div class="num" id="statSchool">-</div><div class="label">本校教师</div></div>
     <div class="stat-card"><div class="num" id="statExternal">-</div><div class="label">外部教师</div></div>
     <div class="stat-card"><div class="num" id="statOrders">-</div><div class="label">总订单数</div></div>
+    <div class="stat-card"><div class="num" id="statRecharge" style="color:#FF6F00;">-</div><div class="label">待确认充值</div></div>
+    <div class="stat-card"><div class="num" id="statFeedback" style="color:#7c3aed;">-</div><div class="label">用户反馈</div></div>
   </div>
 
   <!-- Tabs -->
   <div class="tab-bar">
     <button class="tab-btn active" onclick="switchTab('teachers')">👩‍🏫 教师管理</button>
+    <button class="tab-btn" onclick="switchTab('recharge')">💰 充值确认</button>
     <button class="tab-btn" onclick="switchTab('orders')">📋 订单记录</button>
+    <button class="tab-btn" onclick="switchTab('feedback')">📮 用户反馈</button>
     <button class="tab-btn" onclick="switchTab('register')">➕ 手动注册</button>
   </div>
 
@@ -187,6 +191,22 @@ tr:hover { background: #f9f9f9; }
     </div>
   </div>
 
+  <!-- Recharge Tab -->
+  <div id="tabRecharge" style="display:none;">
+    <div class="table-card">
+      <h3>💰 待确认充值</h3>
+      <div style="overflow-x:auto;">
+        <table id="rechargeTable">
+          <thead>
+            <tr><th>姓名</th><th>手机号</th><th>充值套餐</th><th>金额</th><th>申请时间</th><th>操作</th></tr>
+          </thead>
+          <tbody id="rechargeBody"></tbody>
+        </table>
+      </div>
+      <div id="rechargeHistory" style="margin-top:20px;"></div>
+    </div>
+  </div>
+
   <!-- Orders Tab -->
   <div id="tabOrders" style="display:none;">
     <div class="table-card">
@@ -200,6 +220,24 @@ tr:hover { background: #f9f9f9; }
             <tr><th>ID</th><th>用户</th><th>服务类型</th><th>需求摘要</th><th>状态</th><th>时间</th></tr>
           </thead>
           <tbody id="orderBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Feedback Tab -->
+  <div id="tabFeedback" style="display:none;">
+    <div class="table-card">
+      <h3>
+        用户反馈
+        <button class="export-btn" onclick="exportFeedbacks()">导出CSV</button>
+      </h3>
+      <div style="overflow-x:auto;">
+        <table id="feedbackTable">
+          <thead>
+            <tr><th>姓名</th><th>手机号</th><th>反馈内容</th><th>时间</th></tr>
+          </thead>
+          <tbody id="feedbackBody"></tbody>
         </table>
       </div>
     </div>
@@ -222,7 +260,7 @@ tr:hover { background: #f9f9f9; }
       </div>
       <div class="form-row">
         <input id="regPassword" placeholder="设置密码（至少6位）" type="password">
-        <input id="regBalance" placeholder="初始余额（次）" type="number" value="0">
+        <input id="regBalance" placeholder="初始余额（次）" type="number" value="5">
       </div>
       <button class="submit-btn" onclick="manualRegister()">注册账号</button>
     </div>
@@ -247,17 +285,20 @@ window.adminLogout = adminLogout;
 window.switchTab = switchTab;
 window.addBalance = addBalance;
 window.toggleRole = toggleRole;
+window.setRole = setRole;
 window.manualRegister = manualRegister;
 window.exportTeachers = exportTeachers;
 window.exportOrders = exportOrders;
+window.exportFeedbacks = exportFeedbacks;
 
 const serviceLabels = {
   jiaoan: '生成教案', chujuan: '智能出卷', jianyi: '教学建议',
-  deyu: '德育助手', jiaowu: '教务助手', xiaozhang: '校长小助手'
+  deyu: '德育助手', jiaowu: '教务助手', xiaozhang: '校长小助手', zhishidian: '知识点总结'
 };
 
 let allTeachers = [];
 let allOrders = [];
+let allFeedbacks = [];
 
 // ========== Auth ==========
 function adminLogin() {
@@ -286,8 +327,76 @@ if (sessionStorage.getItem('admin_auth') === '1') {
 
 // ========== Data Loading ==========
 async function loadData() {
-  await Promise.all([loadTeachers(), loadOrders()]);
+  await Promise.all([loadTeachers(), loadOrders(), loadRecharges(), loadFeedbacks()]);
 }
+
+let pendingRecharges = [];
+async function loadRecharges() {
+  const { data, error } = await db.from('recharge_requests').select('*').order('created_at', { ascending: false });
+  if (error) {
+    // Table might not exist yet, silently skip
+    document.getElementById('statRecharge').textContent = '0';
+    document.getElementById('rechargeBody').innerHTML = '<tr><td colspan="6" style="text-align:center;color:#aaa;padding:30px;">充值表未创建，请先执行数据库SQL脚本</td></tr>';
+    return;
+  }
+  pendingRecharges = data || [];
+  renderRecharges();
+}
+
+function renderRecharges() {
+  const pending = pendingRecharges.filter(r => r.status === 'pending');
+  const confirmed = pendingRecharges.filter(r => r.status === 'confirmed');
+  document.getElementById('statRecharge').textContent = pending.length;
+  
+  const tbody = document.getElementById('rechargeBody');
+  if (pending.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#aaa;padding:30px;">暂无待确认充值</td></tr>';
+  } else {
+    tbody.innerHTML = pending.map(r => {
+      const time = r.created_at ? new Date(r.created_at).toLocaleString('zh-CN') : '-';
+      return `<tr>
+        <td>${esc(r.name || '-')}</td>
+        <td>${esc(r.phone || '-')}</td>
+        <td>${r.package_count}次</td>
+        <td style="font-weight:700;color:#FF6F00;">¥${r.amount}</td>
+        <td style="font-size:11px;color:#888;">${time}</td>
+        <td>
+          <button class="act-btn add" onclick="confirmRecharge('${r.id}','${r.user_id}',${r.package_count})">✅ 确认到账</button>
+          <button class="act-btn sub" onclick="rejectRecharge('${r.id}')">❌ 拒绝</button>
+        </td>
+      </tr>`;
+    }).join('');
+  }
+  
+  // Show recent confirmed
+  const historyDiv = document.getElementById('rechargeHistory');
+  if (confirmed.length > 0) {
+    historyDiv.innerHTML = '<h3 style="font-size:14px;margin-bottom:8px;color:#888;">最近已确认</h3>' +
+      confirmed.slice(0, 10).map(r => {
+        const time = r.processed_at ? new Date(r.processed_at).toLocaleString('zh-CN') : '-';
+        return `<div style="font-size:12px;color:#888;padding:4px 0;">✅ ${esc(r.name||r.phone)} ${r.package_count}次 ¥${r.amount} - ${time}</div>`;
+      }).join('');
+  }
+}
+
+window.confirmRecharge = async function(requestId, userId, amount) {
+  // Add balance to user
+  const user = allTeachers.find(t => t.id === userId);
+  if (user) {
+    const newBalance = (parseFloat(user.balance) || 0) + amount;
+    await db.from('profiles').update({ balance: newBalance }).eq('id', userId);
+  }
+  // Mark request as confirmed
+  await db.from('recharge_requests').update({ status: 'confirmed', processed_at: new Date().toISOString() }).eq('id', requestId);
+  showToast(`✅ 已确认充值 ${amount} 次`);
+  await Promise.all([loadTeachers(), loadRecharges()]);
+};
+
+window.rejectRecharge = async function(requestId) {
+  await db.from('recharge_requests').update({ status: 'rejected', processed_at: new Date().toISOString() }).eq('id', requestId);
+  showToast('已拒绝该充值请求');
+  loadRecharges();
+};
 
 async function loadTeachers() {
   const { data, error } = await db.from('profiles').select('*').order('created_at', { ascending: false });
@@ -365,6 +474,52 @@ function renderOrders() {
   }).join('');
 }
 
+// ========== Feedback ==========
+async function loadFeedbacks() {
+  try {
+    const { data, error } = await db.from('feedbacks').select('*').order('created_at', { ascending: false });
+    if (error) {
+      document.getElementById('statFeedback').textContent = '0';
+      document.getElementById('feedbackBody').innerHTML = '<tr><td colspan="4" style="text-align:center;color:#aaa;padding:30px;">反馈表未创建，请先执行数据库SQL脚本</td></tr>';
+      return;
+    }
+    allFeedbacks = data || [];
+    renderFeedbacks();
+    document.getElementById('statFeedback').textContent = allFeedbacks.length;
+  } catch(e) {
+    document.getElementById('statFeedback').textContent = '0';
+  }
+}
+
+function renderFeedbacks() {
+  const tbody = document.getElementById('feedbackBody');
+  if (allFeedbacks.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:#aaa;padding:30px;">暂无用户反馈</td></tr>';
+    return;
+  }
+  tbody.innerHTML = allFeedbacks.map(f => {
+    const time = f.created_at ? new Date(f.created_at).toLocaleString('zh-CN') : '-';
+    return '<tr>' +
+      '<td>' + esc(f.user_name || '-') + '</td>' +
+      '<td>' + esc(f.user_phone || '-') + '</td>' +
+      '<td style="max-width:300px;white-space:pre-wrap;word-break:break-word;">' + esc(f.content || '-') + '</td>' +
+      '<td style="font-size:11px;color:#888;white-space:nowrap;">' + time + '</td>' +
+    '</tr>';
+  }).join('');
+}
+
+function exportFeedbacks() {
+  if (allFeedbacks.length === 0) { showToast('暂无反馈数据可导出'); return; }
+  const headers = ['姓名','手机号','反馈内容','时间'];
+  const rows = allFeedbacks.map(f => [
+    f.user_name || '',
+    f.user_phone || '',
+    f.content || '',
+    f.created_at ? new Date(f.created_at).toLocaleString('zh-CN') : ''
+  ]);
+  downloadCSV('用户反馈_' + dateStr() + '.csv', headers, rows);
+}
+
 // ========== Actions ==========
 async function addBalance(userId, amount) {
   const user = allTeachers.find(t => t.id === userId);
@@ -381,6 +536,17 @@ async function toggleRole(userId, currentRole) {
   const { error } = await db.from('profiles').update({ role: newRole }).eq('id', userId);
   if (error) { showToast('操作失败: ' + error.message); return; }
   showToast(`✅ 已切换角色为 ${newRole === 'school' ? '本校免费' : '外部付费'}`);
+  loadTeachers();
+}
+
+async function setRole(userId, role) {
+  const user = allTeachers.find(t => t.id === userId);
+  if (!user) return;
+  if (user.role === role) { showToast('已经是该角色了'); return; }
+  const { error } = await db.from('profiles').update({ role }).eq('id', userId);
+  if (error) { showToast('操作失败: ' + error.message); return; }
+  const label = role === 'school' ? '本校免费' : '外部付费';
+  showToast(`✅ 已设置 ${user.name || user.phone} 为 ${label}`);
   loadTeachers();
 }
 
@@ -419,7 +585,7 @@ async function manualRegister() {
   document.getElementById('regPhone').value = '';
   document.getElementById('regSchool').value = '';
   document.getElementById('regPassword').value = '';
-  document.getElementById('regBalance').value = '0';
+  document.getElementById('regBalance').value = '5';
   loadTeachers();
 }
 
@@ -472,7 +638,9 @@ function switchTab(tab) {
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   event.target.classList.add('active');
   document.getElementById('tabTeachers').style.display = tab === 'teachers' ? '' : 'none';
+  document.getElementById('tabRecharge').style.display = tab === 'recharge' ? '' : 'none';
   document.getElementById('tabOrders').style.display = tab === 'orders' ? '' : 'none';
+  document.getElementById('tabFeedback').style.display = tab === 'feedback' ? '' : 'none';
   document.getElementById('tabRegister').style.display = tab === 'register' ? '' : 'none';
 }
 

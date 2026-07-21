@@ -1,10 +1,17 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" viewBox="0 0 192 192">
-  <defs>
-    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#00897B"/>
-      <stop offset="100%" style="stop-color:#4DB6AC"/>
-    </linearGradient>
-  </defs>
-  <rect width="192" height="192" rx="40" fill="url(#bg)"/>
-  <text x="96" y="118" text-anchor="middle" font-size="96" fill="white">🎓</text>
+  <rect width="192" height="192" rx="40" fill="#1a56db"/>
+  <!-- 书本 -->
+  <g transform="translate(96,100)">
+    <!-- 左页 -->
+    <path d="M-6,-30 L-6,20 L-40,14 L-40,-24 Z" fill="white" opacity="0.9"/>
+    <!-- 右页 -->
+    <path d="M6,-30 L6,20 L40,14 L40,-24 Z" fill="white"/>
+    <!-- 书脊 -->
+    <path d="M-6,-30 L0,-34 L6,-30 L6,20 L0,24 L-6,20 Z" fill="#dbeafe"/>
+    <!-- 笔 -->
+    <line x1="28" y1="-38" x2="18" y2="-8" stroke="#fbbf24" stroke-width="4" stroke-linecap="round"/>
+    <circle cx="17" cy="-5" r="2.5" fill="#fbbf24"/>
+  </g>
+  <!-- 文字：师 -->
+  <text x="96" y="155" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,sans-serif" font-size="22" font-weight="700" fill="white" opacity="0.9">小能手</text>
 </svg>
