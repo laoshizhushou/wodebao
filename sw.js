@@ -1,5 +1,5 @@
 // Service Worker for 老师的小能手 PWA
-const CACHE_NAME = 'laoshizhushou-v1';
+const CACHE_NAME = 'laoshizhushou-v2';
 const ASSETS = [
   './',
   './chat.html',
