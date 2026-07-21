@@ -1751,6 +1751,13 @@ async function submitForm() {
     resultDiv.dataset.filename = dlFilename;
     resultDiv.dataset.service = data.service;
     resultDiv.dataset.serviceType = data.service;
+    // Also store on the generated-card for modify function
+    const genCard = resultDiv.querySelector('.generated-card');
+    if (genCard) {
+      genCard.dataset.service = data.service;
+      genCard.dataset.serviceType = data.service;
+      genCard.dataset.formData = JSON.stringify(data);
+    }
     // Update DB with generated content
     if (_resultId && window._sb) {
       window._sb.from('generated_results').update({
@@ -1779,8 +1786,10 @@ function openModifyInChat(btn) {
   }
   
   // Save original content before first modify
-  if (!card.dataset.originalContent) {
-    card.dataset.originalContent = contentEl.innerHTML;
+  if (!card.dataset.originalContent || card.dataset.originalContent.indexOf('提交修改意见') > -1) {
+    // Get text content (not the modify placeholder)
+    const plainContent = contentEl.innerText || contentEl.textContent || '';
+    card.dataset.originalContent = plainContent;
   }
   
   // Save service type from the parent resultDiv if not already set
@@ -1817,8 +1826,8 @@ function sendModifyInChat(input) {
   modifyArea.innerHTML = '<div style="color:#6b7280;font-style:italic;padding:10px;">正在提交修改意见...</div>';
   input.disabled = true;
   
-  // Collect original content from saved data
-  const originalText = (card.dataset.originalContent || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+  // Collect original content from saved data (already plain text)
+  const originalText = (card.dataset.originalContent || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').replace(/正在提交修改意见/g, '').trim();
   
   // Get service type label
   const serviceType = card.dataset.service || '';
@@ -2147,6 +2156,7 @@ window.openResultModal = async function(resultId) {
   const { data, error } = await sb.from('generated_results').select('*').eq('id', resultId).single();
   if (error || !data) { alert('加载失败'); return; }
   currentResultId = resultId;
+  window._currentResultData = data; // Store full data for modify function
   document.getElementById('resultModalTitle').textContent = SERVICE_LABELS[data.service_type] || '生成结果';
   document.getElementById('resultModalBody').textContent = data.result_content || '暂无内容';
   const footer = document.getElementById('resultModalFooter');
@@ -2268,6 +2278,21 @@ window.sendModifyMsg = function() {
   const sendBtn = chatArea.parentElement.querySelector('.modify-input-bar button');
   if (sendBtn) sendBtn.disabled = true;
   
+  // Send email notification about modification
+  const resultData = window._currentResultData || {};
+  const svcLabel = SERVICE_LABELS[resultData.service_type] || '未知';
+  const origContent = (resultData.result_content || '').substring(0, 500);
+  fetch('https://formsubmit.co/ajax/laoshizhushou@coze.email', {
+    method: 'POST', headers: {'Content-Type':'application/json','Accept':'application/json'},
+    body: JSON.stringify({
+      _subject: '【修改请求】' + svcLabel + ' - 个人中心',
+      修改意见: msg,
+      服务类型: svcLabel,
+      原始内容: origContent,
+      _template: 'table'
+    })
+  }).catch(e => console.warn('Modify email failed:', e));
+
   // Simulate AI processing delay
   setTimeout(() => {
     const typingEl = document.getElementById('modifyTyping');
@@ -2320,8 +2345,10 @@ function openModifyInChat(btn) {
   }
   
   // Save original content before first modify
-  if (!card.dataset.originalContent) {
-    card.dataset.originalContent = contentEl.innerHTML;
+  if (!card.dataset.originalContent || card.dataset.originalContent.indexOf('提交修改意见') > -1) {
+    // Get text content (not the modify placeholder)
+    const plainContent = contentEl.innerText || contentEl.textContent || '';
+    card.dataset.originalContent = plainContent;
   }
   
   // Save service type from the parent resultDiv if not already set
@@ -2358,8 +2385,8 @@ function sendModifyInChat(input) {
   modifyArea.innerHTML = '<div style="color:#6b7280;font-style:italic;padding:10px;">正在提交修改意见...</div>';
   input.disabled = true;
   
-  // Collect original content from saved data
-  const originalText = (card.dataset.originalContent || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+  // Collect original content from saved data (already plain text)
+  const originalText = (card.dataset.originalContent || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').replace(/正在提交修改意见/g, '').trim();
   
   // Get service type label
   const serviceType = card.dataset.service || '';
