@@ -9,7 +9,7 @@
 - 从 Supabase `feedbacks` 表查询最近的反馈记录
 - 筛选条件：`created_at` 在过去 7 天内（或上次检查之后）
 - 数据库配置：
-  - URL: `https://hsoidekpfhbrnrytudjy.supabase.co`
+  - URL: `https://hsoidetkfphbrnytudjy.supabase.co`
   - Key: `sb_publishable_GTMbvPlzAr4CyikOikDJvg_sHT7SsgI`
 
 ### 2. 记录反馈到本地
