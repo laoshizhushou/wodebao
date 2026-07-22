@@ -1107,14 +1107,13 @@
 
 
 <script>
-// 清除旧版Service Worker缓存
+// Register Service Worker for PWA
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.getRegistrations().then(function(regs) {
-    regs.forEach(function(reg) { reg.unregister(); });
+  navigator.serviceWorker.register('./sw.js').then(function(reg) {
+    console.log('[PWA] SW registered, scope:', reg.scope);
+  }).catch(function(err) {
+    console.warn('[PWA] SW registration failed:', err);
   });
-  if (window.caches) {
-    caches.keys().then(function(keys) { keys.forEach(function(k) { caches.delete(k); }); });
-  }
 }
 </script>
 </body>
