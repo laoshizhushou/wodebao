@@ -332,14 +332,16 @@ async function loadData() {
 
 let pendingRecharges = [];
 async function loadRecharges() {
-  const { data, error } = await db.from('recharge_requests').select('*').order('created_at', { ascending: false });
-  if (error) {
-    // Table might not exist yet, silently skip
+  const SUPABASE_KEY = atob('c2Jfc2VjcmV0X2VudXJXTkNYYmhULVM0bG4tZ2toMVFfRS1MM3RwR28=');
+  let resp = await fetch(SUPABASE_URL + '/rest/v1/recharge_requests?select=*&order=created_at.desc', {
+    headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+  });
+  if (!resp.ok) {
     document.getElementById('statRecharge').textContent = '0';
     document.getElementById('rechargeBody').innerHTML = '<tr><td colspan="6" style="text-align:center;color:#aaa;padding:30px;">充值表未创建，请先执行数据库SQL脚本</td></tr>';
     return;
   }
-  pendingRecharges = data || [];
+  pendingRecharges = await resp.json() || [];
   renderRecharges();
 }
 
@@ -380,35 +382,57 @@ function renderRecharges() {
 }
 
 window.confirmRecharge = async function(requestId, userId, amount) {
+  const SUPABASE_KEY = atob('c2Jfc2VjcmV0X2VudXJXTkNYYmhULVM0bG4tZ2toMVFfRS1MM3RwR28=');
   // Add balance to user
   const user = allTeachers.find(t => t.id === userId);
   if (user) {
     const newBalance = (parseFloat(user.balance) || 0) + amount;
-    await db.from('profiles').update({ balance: newBalance }).eq('id', userId);
+    await fetch(SUPABASE_URL + '/rest/v1/profiles?id=eq.' + userId, {
+      method: 'PATCH',
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+      body: JSON.stringify({ balance: newBalance })
+    });
   }
   // Mark request as confirmed
-  await db.from('recharge_requests').update({ status: 'confirmed', processed_at: new Date().toISOString() }).eq('id', requestId);
+  await fetch(SUPABASE_URL + '/rest/v1/recharge_requests?id=eq.' + requestId, {
+    method: 'PATCH',
+    headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+    body: JSON.stringify({ status: 'confirmed', processed_at: new Date().toISOString() })
+  });
   showToast(`✅ 已确认充值 ${amount} 次`);
   await Promise.all([loadTeachers(), loadRecharges()]);
 };
 
 window.rejectRecharge = async function(requestId) {
-  await db.from('recharge_requests').update({ status: 'rejected', processed_at: new Date().toISOString() }).eq('id', requestId);
+  const SUPABASE_KEY = atob('c2Jfc2VjcmV0X2VudXJXTkNYYmhULVM0bG4tZ2toMVFfRS1MM3RwR28=');
+  await fetch(SUPABASE_URL + '/rest/v1/recharge_requests?id=eq.' + requestId, {
+    method: 'PATCH',
+    headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+    body: JSON.stringify({ status: 'rejected', processed_at: new Date().toISOString() })
+  });
   showToast('已拒绝该充值请求');
   loadRecharges();
 };
 
 async function loadTeachers() {
-  const { data, error } = await db.from('profiles').select('*').order('created_at', { ascending: false });
-  if (error) { showToast('加载教师数据失败: ' + error.message); return; }
+  const SUPABASE_KEY = atob('c2Jfc2VjcmV0X2VudXJXTkNYYmhULVM0bG4tZ2toMVFfRS1MM3RwR28=');
+  const resp = await fetch(SUPABASE_URL + '/rest/v1/profiles?select=*&order=created_at.desc', {
+    headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+  });
+  if (!resp.ok) { showToast('加载教师数据失败: ' + resp.status); return; }
+  const data = await resp.json();
   allTeachers = data || [];
   renderTeachers();
   updateStats();
 }
 
 async function loadOrders() {
-  const { data, error } = await db.from('orders').select('*').order('created_at', { ascending: false }).limit(200);
-  if (error) { showToast('加载订单失败: ' + error.message); return; }
+  const SUPABASE_KEY = atob('c2Jfc2VjcmV0X2VudXJXTkNYYmhULVM0bG4tZ2toMVFfRS1MM3RwR28=');
+  const resp = await fetch(SUPABASE_URL + '/rest/v1/orders?select=*&order=created_at.desc&limit=200', {
+    headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+  });
+  if (!resp.ok) { showToast('加载订单失败: ' + resp.status); return; }
+  const data = await resp.json();
   allOrders = data || [];
   renderOrders();
   updateStats();
@@ -478,13 +502,16 @@ function renderOrders() {
 // ========== Feedback ==========
 async function loadFeedbacks() {
   try {
-    const { data, error } = await db.from('feedbacks').select('*').order('created_at', { ascending: false });
-    if (error) {
+    const SUPABASE_KEY = atob('c2Jfc2VjcmV0X2VudXJXTkNYYmhULVM0bG4tZ2toMVFfRS1MM3RwR28=');
+    const resp = await fetch(SUPABASE_URL + '/rest/v1/feedbacks?select=*&order=created_at.desc', {
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+    });
+    if (!resp.ok) {
       document.getElementById('statFeedback').textContent = '0';
       document.getElementById('feedbackBody').innerHTML = '<tr><td colspan="4" style="text-align:center;color:#aaa;padding:30px;">反馈表未创建，请先执行数据库SQL脚本</td></tr>';
       return;
     }
-    allFeedbacks = data || [];
+    allFeedbacks = await resp.json() || [];
     renderFeedbacks();
     document.getElementById('statFeedback').textContent = allFeedbacks.length;
   } catch(e) {
@@ -523,29 +550,44 @@ function exportFeedbacks() {
 
 // ========== Actions ==========
 async function addBalance(userId, amount) {
+  const SUPABASE_KEY = atob('c2Jfc2VjcmV0X2VudXJXTkNYYmhULVM0bG4tZ2toMVFfRS1MM3RwR28=');
   const user = allTeachers.find(t => t.id === userId);
   if (!user) return;
   const newBalance = (parseFloat(user.balance) || 0) + amount;
-  const { error } = await db.from('profiles').update({ balance: newBalance }).eq('id', userId);
-  if (error) { showToast('操作失败: ' + error.message); return; }
+  const resp = await fetch(SUPABASE_URL + '/rest/v1/profiles?id=eq.' + userId, {
+    method: 'PATCH',
+    headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+    body: JSON.stringify({ balance: newBalance })
+  });
+  if (!resp.ok) { showToast('操作失败: ' + resp.status); return; }
   showToast(`✅ 已为 ${user.name || user.phone} 增加 ${amount} 次`);
   loadTeachers();
 }
 
 async function toggleRole(userId, currentRole) {
+  const SUPABASE_KEY = atob('c2Jfc2VjcmV0X2VudXJXTkNYYmhULVM0bG4tZ2toMVFfRS1MM3RwR28=');
   const newRole = currentRole === 'school' ? 'external' : 'school';
-  const { error } = await db.from('profiles').update({ role: newRole }).eq('id', userId);
-  if (error) { showToast('操作失败: ' + error.message); return; }
+  const resp = await fetch(SUPABASE_URL + '/rest/v1/profiles?id=eq.' + userId, {
+    method: 'PATCH',
+    headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+    body: JSON.stringify({ role: newRole })
+  });
+  if (!resp.ok) { showToast('操作失败: ' + resp.status); return; }
   showToast(`✅ 已切换角色为 ${newRole === 'school' ? '本校免费' : '外部付费'}`);
   loadTeachers();
 }
 
 async function setRole(userId, role) {
+  const SUPABASE_KEY = atob('c2Jfc2VjcmV0X2VudXJXTkNYYmhULVM0bG4tZ2toMVFfRS1MM3RwR28=');
   const user = allTeachers.find(t => t.id === userId);
   if (!user) return;
   if (user.role === role) { showToast('已经是该角色了'); return; }
-  const { error } = await db.from('profiles').update({ role }).eq('id', userId);
-  if (error) { showToast('操作失败: ' + error.message); return; }
+  const resp = await fetch(SUPABASE_URL + '/rest/v1/profiles?id=eq.' + userId, {
+    method: 'PATCH',
+    headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+    body: JSON.stringify({ role })
+  });
+  if (!resp.ok) { showToast('操作失败: ' + resp.status); return; }
   const label = role === 'school' ? '本校免费' : '外部付费';
   showToast(`✅ 已设置 ${user.name || user.phone} 为 ${label}`);
   loadTeachers();
@@ -553,13 +595,18 @@ async function setRole(userId, role) {
 
 async function deleteTeacher(userId, name) {
   if (!confirm(`确定要删除用户「${name}」吗？\n此操作将删除该用户的所有数据，不可恢复！`)) return;
-  const { error } = await db.from('profiles').delete().eq('id', userId);
-  if (error) { showToast('删除失败: ' + error.message); return; }
+  const SUPABASE_KEY = atob('c2Jfc2VjcmV0X2VudXJXTkNYYmhULVM0bG4tZ2toMVFfRS1MM3RwR28=');
+  const resp = await fetch(SUPABASE_URL + '/rest/v1/profiles?id=eq.' + userId, {
+    method: 'DELETE',
+    headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Prefer': 'return=minimal' }
+  });
+  if (!resp.ok) { showToast('删除失败: ' + resp.status); return; }
   showToast(`已删除用户 ${name}`);
   loadTeachers();
 }
 
 async function manualRegister() {
+  const SUPABASE_KEY = atob('c2Jfc2VjcmV0X2VudXJXTkNYYmhULVM0bG4tZ2toMVFfRS1MM3RwR28=');
   const name = document.getElementById('regName').value.trim();
   const phone = document.getElementById('regPhone').value.trim();
   const school = document.getElementById('regSchool').value.trim();
@@ -570,24 +617,26 @@ async function manualRegister() {
   if (!name || !phone || !password) { showToast('请填写姓名、手机号和密码'); return; }
   if (password.length < 6) { showToast('密码至少6位'); return; }
 
-  // Create auth user
-  const { data: authData, error: authError } = await db.auth.signUp({
-    email: phone + '@teacher.local',
-    password: password,
-    options: { data: { phone, name } }
+  // Create auth user via Supabase Auth API
+  let userId = '';
+  const authResp = await fetch(SUPABASE_URL + '/auth/v1/signup', {
+    method: 'POST',
+    headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email: phone + '@teacher.local', password: password, data: { phone, name } })
   });
-  if (authError && !authError.message.includes('already')) {
-    showToast('注册失败: ' + authError.message); return;
+  const authResult = await authResp.json();
+  if (!authResp.ok && !authResult.msg?.includes('already')) {
+    showToast('注册失败: ' + (authResult.msg || authResult.error_description || authResp.status)); return;
   }
+  userId = authResult?.user?.id || '';
 
-  const userId = authData?.user?.id || '';
-
-  // Create profile
-  const { error: profileError } = await db.from('profiles').upsert({
-    id: userId || crypto.randomUUID(),
-    phone, name, school, role, balance
+  // Create profile via REST API
+  const profileResp = await fetch(SUPABASE_URL + '/rest/v1/profiles', {
+    method: 'POST',
+    headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+    body: JSON.stringify({ id: userId || crypto.randomUUID(), phone, name, school, role, balance })
   });
-  if (profileError) { showToast('创建档案失败: ' + profileError.message); return; }
+  if (!profileResp.ok) { showToast('创建档案失败: ' + profileResp.status); return; }
 
   showToast(`✅ 已注册 ${name}（${phone}）`);
   document.getElementById('regName').value = '';
