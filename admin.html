@@ -447,6 +447,7 @@ function renderTeachers() {
         <button class="act-btn add" onclick="addBalance('${t.id}',50)">+50</button>
         <button class="act-btn role" onclick="setRole('${t.id}','school')" style="${t.role==='school'?'font-weight:700;opacity:0.6':''}">免费</button>
         <button class="act-btn role" onclick="setRole('${t.id}','external')" style="${t.role==='external'?'font-weight:700;opacity:0.6':''}">付费</button>
+        <button class="act-btn" onclick="deleteTeacher('${t.id}','${esc(t.name || t.phone)}')" style="background:#fee2e2;color:#dc2626;">删除</button>
       </td>
     </tr>`;
   }).join('');
@@ -550,6 +551,14 @@ async function setRole(userId, role) {
   loadTeachers();
 }
 
+async function deleteTeacher(userId, name) {
+  if (!confirm(`确定要删除用户「${name}」吗？\n此操作将删除该用户的所有数据，不可恢复！`)) return;
+  const { error } = await db.from('profiles').delete().eq('id', userId);
+  if (error) { showToast('删除失败: ' + error.message); return; }
+  showToast(`已删除用户 ${name}`);
+  loadTeachers();
+}
+
 async function manualRegister() {
   const name = document.getElementById('regName').value.trim();
   const phone = document.getElementById('regPhone').value.trim();
@@ -644,15 +653,4 @@ function switchTab(tab) {
   document.getElementById('tabRegister').style.display = tab === 'register' ? '' : 'none';
 }
 
-function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
-function dateStr() { const d = new Date(); return d.getFullYear() + String(d.getMonth()+1).padStart(2,'0') + String(d.getDate()).padStart(2,'0'); }
-
-function showToast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg; t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2500);
-}
-</script>
-
-</body>
-</html>
+function esc(s) { const d = document.createElement('div'); d.textContent 
