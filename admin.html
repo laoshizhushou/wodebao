@@ -4,9 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>老师的小能手 - 管理后台</title>
-<script type="importmap">
-{ "imports": { "@supabase/supabase-js": "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm" } }
-</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <style>
 * { margin:0; padding:0; box-sizing:border-box; }
 body {
@@ -270,8 +268,8 @@ tr:hover { background: #f9f9f9; }
 <!-- Toast -->
 <div class="toast" id="toast"></div>
 
-<script type="module">
-import { createClient } from '@supabase/supabase-js';
+<script>
+const { createClient } = window.supabase;
 
 const SUPABASE_URL = 'https://hsoidetkfphbrnytudjy.supabase.co';
 const SUPABASE_SERVICE_KEY = 'sb_publishable_GTMbvPlzAr4CyikOikDJvg_sHT7SsgI';
@@ -290,6 +288,7 @@ window.manualRegister = manualRegister;
 window.exportTeachers = exportTeachers;
 window.exportOrders = exportOrders;
 window.exportFeedbacks = exportFeedbacks;
+window.deleteTeacher = deleteTeacher;
 
 const serviceLabels = {
   jiaoan: '生成教案', chujuan: '智能出卷', jianyi: '教学建议',
@@ -653,4 +652,15 @@ function switchTab(tab) {
   document.getElementById('tabRegister').style.display = tab === 'register' ? '' : 'none';
 }
 
-function esc(s) { const d = document.createElement('div'); d.textContent 
+function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+function dateStr() { const d = new Date(); return d.getFullYear() + String(d.getMonth()+1).padStart(2,'0') + String(d.getDate()).padStart(2,'0'); }
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+</script>
+
+</body>
+</html>
