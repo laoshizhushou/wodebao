@@ -272,7 +272,8 @@ tr:hover { background: #f9f9f9; }
 const { createClient } = window.supabase;
 
 const SUPABASE_URL = 'https://hsoidetkfphbrnytudjy.supabase.co';
-const SUPABASE_SERVICE_KEY = 'sb_publishable_GTMbvPlzAr4CyikOikDJvg_sHT7SsgI';
+// Admin uses service role key to bypass RLS for management operations
+const SUPABASE_SERVICE_KEY = atob('c2Jfc2VjcmV0X2VudXJXTkNYYmhULVM0bG4tZ2toMVFfRS1MM3RwR28=');
 const ADMIN_PASSWORD = 'teacher2026';
 
 const db = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);

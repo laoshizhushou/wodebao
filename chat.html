@@ -1702,14 +1702,15 @@ async function submitForm() {
   chatMessages.appendChild(genDiv);
   scrollToBottom();
 
-  // Simulate AI generation (3-5 seconds)
-  const delay = 3000 + Math.random() * 2000;
-  setTimeout(() => {
-    genDiv.remove();
-    const generatedContent = generateAITemplate(data);
-    const dlFilename = getDownloadFilename(data.service, data);
-    const escapedContent = escapeHtml(generatedContent);
+  // Poll database for AI-generated content
+  const maxWait = 120000; // 2 minutes max
+  const pollInterval = 3000; // check every 3 seconds
+  const startTime = Date.now();
+  const dlFilename = getDownloadFilename(data.service, data);
 
+  function showResult(generatedContent) {
+    genDiv.remove();
+    const escapedContent = escapeHtml(generatedContent);
     const resultDiv = document.createElement('div');
     resultDiv.className = 'message bot';
     resultDiv.innerHTML =
@@ -1727,29 +1728,46 @@ async function submitForm() {
           '</div>' +
         '</div>' +
       '</div>';
-    // Store content for copy/download
     resultDiv._generatedContent = generatedContent;
     resultDiv._dlFilename = dlFilename;
     resultDiv.dataset.filename = dlFilename;
     resultDiv.dataset.service = data.service;
     resultDiv.dataset.serviceType = data.service;
-    // Also store on the generated-card for modify function
     const genCard = resultDiv.querySelector('.generated-card');
     if (genCard) {
       genCard.dataset.service = data.service;
       genCard.dataset.serviceType = data.service;
       genCard.dataset.formData = JSON.stringify(data);
     }
-    // Update DB with generated content
-    if (_resultId && window._sb) {
-      window._sb.from('generated_results').update({
-        result_content: generatedContent, status: 'completed', completed_at: new Date().toISOString()
-      }).eq('id', _resultId).then(() => {}).catch(e => console.warn('DB update failed:', e));
-    }
     resultDiv.dataset.resultId = _resultId || '';
     chatMessages.appendChild(resultDiv);
     scrollToBottom();
-  }, delay);
+  }
+
+  function pollForResult() {
+    if (!_resultId || !window._sb) {
+      // No DB, fallback to template
+      genDiv.remove();
+      addBotMessage('内容生成失败，请刷新后重试。');
+      return;
+    }
+    if (Date.now() - startTime > maxWait) {
+      genDiv.remove();
+      addBotMessage('生成时间较长，已为您保存需求。您可以稍后在"我的订单"中查看结果，或重新提交。');
+      return;
+    }
+    window._sb.from('generated_results').select('status,result_content').eq('id', _resultId).single().then(({ data: row, error }) => {
+      if (error || !row) { setTimeout(pollForResult, pollInterval); return; }
+      if (row.status === 'completed' && row.result_content) {
+        showResult(row.result_content);
+      } else {
+        setTimeout(pollForResult, pollInterval);
+      }
+    }).catch(() => setTimeout(pollForResult, pollInterval));
+  }
+
+  // Start polling after 2 seconds
+  setTimeout(pollForResult, 2000);
 }
 window.submitForm = submitForm;
 
