@@ -272,11 +272,11 @@ tr:hover { background: #f9f9f9; }
 const { createClient } = window.supabase;
 
 const SUPABASE_URL = 'https://hsoidetkfphbrnytudjy.supabase.co';
-// Admin uses service role key to bypass RLS for management operations
-const SUPABASE_SERVICE_KEY = atob('c2Jfc2VjcmV0X2VudXJXTkNYYmhULVM0bG4tZ2toMVFfRS1MM3RwR28=');
+// Admin uses anon key; RLS policies must allow anon access for management tables
+const SUPABASE_KEY = atob('c2JfcHVibGlzaGFibGVfR1RNQnZQbHpBcjRDeWlrT2lrREp2Z19zSFE3U1NzSQ==');
 const ADMIN_PASSWORD = 'teacher2026';
 
-const db = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+const db = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // Make functions globally accessible
 window.adminLogin = adminLogin;
@@ -332,7 +332,6 @@ async function loadData() {
 
 let pendingRecharges = [];
 async function loadRecharges() {
-  const SUPABASE_KEY = atob('c2Jfc2VjcmV0X2VudXJXTkNYYmhULVM0bG4tZ2toMVFfRS1MM3RwR28=');
   let resp = await fetch(SUPABASE_URL + '/rest/v1/recharge_requests?select=*&order=created_at.desc', {
     headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
   });
@@ -382,7 +381,6 @@ function renderRecharges() {
 }
 
 window.confirmRecharge = async function(requestId, userId, amount) {
-  const SUPABASE_KEY = atob('c2Jfc2VjcmV0X2VudXJXTkNYYmhULVM0bG4tZ2toMVFfRS1MM3RwR28=');
   // Add balance to user
   const user = allTeachers.find(t => t.id === userId);
   if (user) {
@@ -404,7 +402,6 @@ window.confirmRecharge = async function(requestId, userId, amount) {
 };
 
 window.rejectRecharge = async function(requestId) {
-  const SUPABASE_KEY = atob('c2Jfc2VjcmV0X2VudXJXTkNYYmhULVM0bG4tZ2toMVFfRS1MM3RwR28=');
   await fetch(SUPABASE_URL + '/rest/v1/recharge_requests?id=eq.' + requestId, {
     method: 'PATCH',
     headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
@@ -415,7 +412,6 @@ window.rejectRecharge = async function(requestId) {
 };
 
 async function loadTeachers() {
-  const SUPABASE_KEY = atob('c2Jfc2VjcmV0X2VudXJXTkNYYmhULVM0bG4tZ2toMVFfRS1MM3RwR28=');
   const resp = await fetch(SUPABASE_URL + '/rest/v1/profiles?select=*&order=created_at.desc', {
     headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
   });
@@ -427,7 +423,6 @@ async function loadTeachers() {
 }
 
 async function loadOrders() {
-  const SUPABASE_KEY = atob('c2Jfc2VjcmV0X2VudXJXTkNYYmhULVM0bG4tZ2toMVFfRS1MM3RwR28=');
   const resp = await fetch(SUPABASE_URL + '/rest/v1/orders?select=*&order=created_at.desc&limit=200', {
     headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
   });
@@ -502,7 +497,6 @@ function renderOrders() {
 // ========== Feedback ==========
 async function loadFeedbacks() {
   try {
-    const SUPABASE_KEY = atob('c2Jfc2VjcmV0X2VudXJXTkNYYmhULVM0bG4tZ2toMVFfRS1MM3RwR28=');
     const resp = await fetch(SUPABASE_URL + '/rest/v1/feedbacks?select=*&order=created_at.desc', {
       headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
     });
@@ -550,7 +544,6 @@ function exportFeedbacks() {
 
 // ========== Actions ==========
 async function addBalance(userId, amount) {
-  const SUPABASE_KEY = atob('c2Jfc2VjcmV0X2VudXJXTkNYYmhULVM0bG4tZ2toMVFfRS1MM3RwR28=');
   const user = allTeachers.find(t => t.id === userId);
   if (!user) return;
   const newBalance = (parseFloat(user.balance) || 0) + amount;
@@ -565,7 +558,6 @@ async function addBalance(userId, amount) {
 }
 
 async function toggleRole(userId, currentRole) {
-  const SUPABASE_KEY = atob('c2Jfc2VjcmV0X2VudXJXTkNYYmhULVM0bG4tZ2toMVFfRS1MM3RwR28=');
   const newRole = currentRole === 'school' ? 'external' : 'school';
   const resp = await fetch(SUPABASE_URL + '/rest/v1/profiles?id=eq.' + userId, {
     method: 'PATCH',
@@ -578,7 +570,6 @@ async function toggleRole(userId, currentRole) {
 }
 
 async function setRole(userId, role) {
-  const SUPABASE_KEY = atob('c2Jfc2VjcmV0X2VudXJXTkNYYmhULVM0bG4tZ2toMVFfRS1MM3RwR28=');
   const user = allTeachers.find(t => t.id === userId);
   if (!user) return;
   if (user.role === role) { showToast('已经是该角色了'); return; }
@@ -595,7 +586,6 @@ async function setRole(userId, role) {
 
 async function deleteTeacher(userId, name) {
   if (!confirm(`确定要删除用户「${name}」吗？\n此操作将删除该用户的所有数据，不可恢复！`)) return;
-  const SUPABASE_KEY = atob('c2Jfc2VjcmV0X2VudXJXTkNYYmhULVM0bG4tZ2toMVFfRS1MM3RwR28=');
   const resp = await fetch(SUPABASE_URL + '/rest/v1/profiles?id=eq.' + userId, {
     method: 'DELETE',
     headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Prefer': 'return=minimal' }
@@ -606,7 +596,6 @@ async function deleteTeacher(userId, name) {
 }
 
 async function manualRegister() {
-  const SUPABASE_KEY = atob('c2Jfc2VjcmV0X2VudXJXTkNYYmhULVM0bG4tZ2toMVFfRS1MM3RwR28=');
   const name = document.getElementById('regName').value.trim();
   const phone = document.getElementById('regPhone').value.trim();
   const school = document.getElementById('regSchool').value.trim();
