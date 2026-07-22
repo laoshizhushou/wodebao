@@ -1575,29 +1575,7 @@ function downloadContent(content, filename) {
   filename = filename.replace(/\.txt$/, '.docx');
   
   // Convert plain text / markdown-like content to HTML for Word
-  const htmlContent = '<!DOCTYPE html><html><head><meta charset="utf-8"><style>body{font-family:SimSun,serif;font-size:12pt;line-height:1.8;}h1{font-size:18pt;text-align:center;}h2{font-size:15pt;border-bottom:1px solid #333;padding-bottom:4px;}h3{font-size:13pt;}table{border-collapse:collapse;width:100%;margin:10px 0;}td,th{border:1px solid #999;padding:6px 8px;}th{background:#f0f0f0;}blockquote{border-left:3px solid #2563eb;margin:10px 0;padding:8px 12px;background:#f8fafc;color:#334155;}</style></head><body>' + content.replace(/\n/g, '<br>') + '
-<script>
-// iOS PWA install hint
-(function() {
-  var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-  var isStandalone = window.navigator.standalone === true;
-  var dismissed = localStorage.getItem('pwa_hint_dismissed');
-  if (isIOS && !isStandalone && !dismissed) {
-    setTimeout(function() {
-      var div = document.createElement('div');
-      div.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#1a56db;color:#fff;padding:12px 20px;border-radius:10px;font-size:14px;z-index:99999;box-shadow:0 4px 12px rgba(0,0,0,0.2);max-width:90%;text-align:center;';
-      div.innerHTML = '点击底部分享按钮 <span style="font-size:18px">⬆</span><br>选择「添加到主屏幕」即可像APP一样使用<div style="margin-top:8px;font-size:12px;opacity:0.8;cursor:pointer;" id="dismissPwaHint">不再提示</div>';
-      document.body.appendChild(div);
-      div.querySelector('#dismissPwaHint').onclick = function() { div.remove(); localStorage.setItem('pwa_hint_dismissed', '1'); };
-      setTimeout(function() { if (div.parentNode) div.remove(); }, 15000);
-    }, 3000);
-  }
-})();
-</script>
-<script>
-if ('serviceWorker' in navigator) { navigator.serviceWorker.register('./sw.js').catch(function(){}); }
-</script>
-</body></html>';
+  const htmlContent = '<!DOCTYPE html><html><head><meta charset="utf-8"><style>body{font-family:SimSun,serif;font-size:12pt;line-height:1.8;}h1{font-size:18pt;text-align:center;}h2{font-size:15pt;border-bottom:1px solid #333;padding-bottom:4px;}h3{font-size:13pt;}table{border-collapse:collapse;width:100%;margin:10px 0;}td,th{border:1px solid #999;padding:6px 8px;}th{background:#f0f0f0;}blockquote{border-left:3px solid #2563eb;margin:10px 0;padding:8px 12px;background:#f8fafc;color:#334155;}</style></head><body>' + content.replace(/\n/g, '<br>') + '</body></html>';
   
   try {
     // Use html-docx-js if available
@@ -2619,10 +2597,6 @@ window.updateBalanceDisplay = updateBalanceDisplay;
 <script>
 (function() {
   'use strict';
-  );
-      }).catch(function(err) { console.warn('[PWA] SW registration failed:', err); });
-    });
-  }
   var banner = document.getElementById('pwaBanner');
   var btnInstall = document.getElementById('btnPwaInstall');
   var btnClose = document.getElementById('btnPwaClose');
