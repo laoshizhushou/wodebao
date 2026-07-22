@@ -3,6 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <title>老师的小能手 - AI教育助手</title>
     <meta name="theme-color" content="#1a56db">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -1104,7 +1107,15 @@
 
 
 <script>
-if ('serviceWorker' in navigator) { navigator.serviceWorker.register('./sw.js').catch(function(){}); }
+// 清除旧版Service Worker缓存
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.getRegistrations().then(function(regs) {
+    regs.forEach(function(reg) { reg.unregister(); });
+  });
+  if (window.caches) {
+    caches.keys().then(function(keys) { keys.forEach(function(k) { caches.delete(k); }); });
+  }
+}
 </script>
 </body>
 </html>
