@@ -9,8 +9,9 @@
 <title>老师的小能手 - AI教育助手</title>
 <link rel="manifest" href="./manifest.json">
 <meta name="theme-color" content="#1a56db">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" name="black-translucent">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="小能手">
 <link rel="apple-touch-icon" href="./icon-192.png">
 <link rel="icon" type="image/svg+xml" href="./icon-192.png">
@@ -2081,14 +2082,17 @@ function renderProfile() {
   const nameEl = document.getElementById('profileName'); if (nameEl) nameEl.textContent = u.name || '老师';
   const phoneEl = document.getElementById('profilePhone'); if (phoneEl) phoneEl.textContent = u.phone || '';
   const roleEl = document.getElementById('profileRole');
-  if (u.role === 'school') { roleEl.textContent = '本校教师'; roleEl.className = 'profile-role free'; }
-  else { roleEl.textContent = '外部教师'; roleEl.className = 'profile-role paid'; }
+  if (roleEl) {
+    if (u.role === 'school') { roleEl.textContent = '本校教师'; roleEl.className = 'profile-role free'; }
+    else { roleEl.textContent = '外部教师'; roleEl.className = 'profile-role paid'; }
+  }
   const balEl = document.getElementById('profileBalance');
   if (u.role === 'external') {
-    balEl.style.display = ''; const balAmtEl = document.getElementById('balanceAmount'); if (balAmtEl) balAmtEl.textContent = u.balance || 0;
+    if (balEl) balEl.style.display = '';
+    const balAmtEl = document.getElementById('balanceAmount'); if (balAmtEl) balAmtEl.textContent = u.balance || 0;
     if (u.balance <= 2 && u.balance > 0) { balEl.innerHTML = '剩余：<span style="color:#d97706">' + u.balance + '</span> 次 <span style="color:#d97706;font-size:11px;">余额不足</span>'; }
     if (u.balance <= 0) { balEl.innerHTML = '剩余：<span style="color:#ef4444">0</span> <span style="color:#ef4444;font-size:11px;">已用完</span>'; }
-  } else { balEl.style.display = 'none'; }
+  } else { if (balEl) balEl.style.display = 'none'; }
   // Show recharge section for external teachers
   const rechargeSec = document.getElementById('rechargeSection');
   console.log('rechargeSection exists:', !!rechargeSec, 'role:', u.role);
