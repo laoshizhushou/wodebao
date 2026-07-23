@@ -7,810 +7,653 @@
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
     <title>老师的小能手 - AI教育助手</title>
-    <meta name="theme-color" content="#1a56db">
+    <meta name="theme-color" content="#6366f1">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="小能手">
     <link rel="apple-touch-icon" href="./icon-192.png">
     <link rel="manifest" href="./manifest.json">
     <style>
-        *, *::before, *::after {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        html {
-            scroll-behavior: smooth;
-        }
-
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
-            line-height: 1.6;
-            color: #1f2937;
-            background: #f0f2f5;
+            line-height: 1.6; color: #1f2937; background: #f8f9fc;
             -webkit-font-smoothing: antialiased;
         }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 24px;
-        }
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
 
         /* ========== 导航栏 ========== */
         .navbar {
-            background: #fff;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-            position: sticky;
-            top: 0;
-            z-index: 100;
+            background: rgba(255,255,255,0.92);
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            box-shadow: 0 1px 12px rgba(99,102,241,0.06);
+            position: sticky; top: 0; z-index: 100;
+            border-bottom: 1px solid rgba(236,238,243,0.6);
         }
-
         .navbar .container {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0 24px;
-            height: 56px;
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 0 24px; height: 60px;
         }
-
         .logo {
-            font-size: 18px;
-            font-weight: 700;
-            color: #1a56db;
-            display: flex;
-            align-items: center;
-            gap: 8px;
+            font-size: 18px; font-weight: 700; color: #667eea;
+            display: flex; align-items: center; gap: 10px;
         }
-
         .logo-icon {
-            width: 28px;
-            height: 28px;
-            background: #1a56db;
-            border-radius: 6px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #fff;
-            font-size: 13px;
-            font-weight: 700;
+            width: 32px; height: 32px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 10px; display: flex; align-items: center; justify-content: center;
+            color: #fff; font-size: 14px; font-weight: 700;
+            box-shadow: 0 2px 8px rgba(102,126,234,0.3);
         }
-
-        .nav-links {
-            display: flex;
-            gap: 32px;
-            list-style: none;
-            align-items: center;
-        }
-
+        .nav-links { display: flex; gap: 28px; list-style: none; align-items: center; }
         .nav-links a {
-            text-decoration: none;
-            color: #4b5563;
-            font-size: 14px;
-            font-weight: 500;
-            transition: color 0.15s;
+            text-decoration: none; color: #4b5063; font-size: 14px; font-weight: 500;
+            transition: color 0.2s ease; position: relative;
         }
-
-        .nav-links a:hover {
-            color: #1a56db;
+        .nav-links a::after {
+            content: ''; position: absolute; bottom: -4px; left: 0; width: 0; height: 2px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 1px; transition: width 0.25s ease;
         }
-
+        .nav-links a:hover { color: #667eea; }
+        .nav-links a:hover::after { width: 100%; }
         .nav-cta {
-            padding: 8px 20px;
-            background: #1a56db;
-            color: #fff !important;
-            border-radius: 6px;
-            font-weight: 600 !important;
-            transition: background 0.15s !important;
+            padding: 9px 22px !important;
+            background: linear-gradient(135deg, #667eea, #764ba2) !important;
+            color: #fff !important; border-radius: 10px !important;
+            font-weight: 600 !important; transition: all 0.25s ease !important;
+            box-shadow: 0 2px 10px rgba(102,126,234,0.25);
         }
+        .nav-cta::after { display: none !important; }
+        .nav-cta:hover { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(102,126,234,0.35) !important; }
 
-        .nav-cta:hover {
-            background: #1e40af !important;
-            color: #fff !important;
-        }
-
-        /* 汉堡菜单按钮 */
         .hamburger {
-            display: none;
-            background: none;
-            border: none;
-            cursor: pointer;
-            padding: 4px;
-            width: 32px;
-            height: 32px;
-            align-items: center;
-            justify-content: center;
+            display: none; background: none; border: none; cursor: pointer;
+            padding: 4px; width: 32px; height: 32px; align-items: center; justify-content: center;
         }
-
         .hamburger span {
-            display: block;
-            width: 20px;
-            height: 2px;
-            background: #374151;
-            border-radius: 1px;
-            transition: all 0.3s;
+            display: block; width: 20px; height: 2px; background: #374151;
+            border-radius: 1px; transition: all 0.3s;
         }
-
-        .hamburger span + span {
-            margin-top: 5px;
-        }
-
-        .hamburger.active span:nth-child(1) {
-            transform: rotate(45deg) translate(5px, 5px);
-        }
-
-        .hamburger.active span:nth-child(2) {
-            opacity: 0;
-        }
-
-        .hamburger.active span:nth-child(3) {
-            transform: rotate(-45deg) translate(5px, -5px);
-        }
-
-        /* 手机端导航菜单 */
+        .hamburger span + span { margin-top: 5px; }
+        .hamburger.active span:nth-child(1) { transform: rotate(45deg) translate(5px, 5px); }
+        .hamburger.active span:nth-child(2) { opacity: 0; }
+        .hamburger.active span:nth-child(3) { transform: rotate(-45deg) translate(5px, -5px); }
         .mobile-nav {
-            display: none;
-            position: absolute;
-            top: 56px;
-            left: 0;
-            right: 0;
-            background: #fff;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            padding: 16px 24px;
-            z-index: 99;
+            display: none; position: absolute; top: 60px; left: 0; right: 0;
+            background: rgba(255,255,255,0.98); backdrop-filter: blur(20px);
+            box-shadow: 0 8px 30px rgba(99,102,241,0.1); padding: 16px 24px; z-index: 99;
+            border-bottom: 1px solid #eceef3;
         }
-
-        .mobile-nav.open {
-            display: block;
-        }
-
+        .mobile-nav.open { display: block; }
         .mobile-nav a {
-            display: block;
-            padding: 12px 0;
-            color: #374151;
-            text-decoration: none;
-            font-size: 15px;
-            font-weight: 500;
-            border-bottom: 1px solid #f3f4f6;
+            display: block; padding: 14px 0; color: #374151; text-decoration: none;
+            font-size: 15px; font-weight: 500; border-bottom: 1px solid #f3f4f6;
         }
-
         .mobile-nav a:last-child {
-            border-bottom: none;
-            color: #1a56db;
-            font-weight: 600;
+            border-bottom: none; font-weight: 600;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
         }
 
         /* ========== Hero 区域 ========== */
         .hero {
-            background: #1a56db;
-            color: #fff;
-            padding: 100px 0;
-            text-align: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff; padding: 80px 0 0; position: relative; overflow: hidden;
         }
-
-        .hero h1 {
-            font-size: 44px;
-            font-weight: 700;
-            margin-bottom: 16px;
-            letter-spacing: -0.5px;
+        .hero::before {
+            content: ''; position: absolute; top: -50%; right: -20%; width: 600px; height: 600px;
+            background: radial-gradient(circle, rgba(255,255,255,0.08) 0%, transparent 70%);
+            border-radius: 50%;
         }
-
-        .hero p {
-            font-size: 18px;
-            opacity: 0.9;
-            margin-bottom: 36px;
-            max-width: 600px;
-            margin-left: auto;
-            margin-right: auto;
-            line-height: 1.7;
+        .hero::after {
+            content: ''; position: absolute; bottom: -30%; left: -10%; width: 400px; height: 400px;
+            background: radial-gradient(circle, rgba(255,255,255,0.06) 0%, transparent 70%);
+            border-radius: 50%;
         }
-
+        .hero .container { position: relative; z-index: 1; }
+        .hero-inner { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: center; }
+        .hero-text h1 {
+            font-size: 42px; font-weight: 800; margin-bottom: 16px;
+            letter-spacing: -0.5px; line-height: 1.25;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .hero-text h1 .highlight {
+            display: inline;
+            background: linear-gradient(135deg, #fbbf24, #f59e0b);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+        }
+        .hero-text p {
+            font-size: 17px; opacity: 0.9; margin-bottom: 32px;
+            line-height: 1.8; max-width: 480px;
+        }
+        .hero-btns { display: flex; gap: 14px; flex-wrap: wrap; }
         .hero-cta {
-            display: inline-block;
-            background: #fff;
-            color: #1a56db;
-            padding: 14px 40px;
-            border-radius: 8px;
-            text-decoration: none;
-            font-size: 16px;
-            font-weight: 600;
-            transition: all 0.15s;
+            display: inline-flex; align-items: center; gap: 8px;
+            background: #fff; color: #667eea; padding: 14px 32px;
+            border-radius: 12px; text-decoration: none; font-size: 16px; font-weight: 700;
+            transition: all 0.25s ease;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
         }
-
-        .hero-cta:hover {
-            background: #eff6ff;
-            transform: translateY(-1px);
-            box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+        .hero-cta:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(0,0,0,0.2); }
+        .hero-cta-secondary {
+            display: inline-flex; align-items: center; gap: 8px;
+            background: rgba(255,255,255,0.15); color: #fff; padding: 14px 28px;
+            border-radius: 12px; text-decoration: none; font-size: 15px; font-weight: 600;
+            border: 1px solid rgba(255,255,255,0.3);
+            transition: all 0.25s ease;
+            backdrop-filter: blur(4px);
         }
-
+        .hero-cta-secondary:hover { background: rgba(255,255,255,0.25); }
+        .hero-image {
+            position: relative; display: flex; justify-content: center; align-items: center;
+        }
+        .hero-image img {
+            width: 100%; max-width: 460px; border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+            border: 2px solid rgba(255,255,255,0.15);
+        }
+        .hero-image .floating-badge {
+            position: absolute; bottom: 20px; left: -20px;
+            background: rgba(255,255,255,0.95); color: #1f2937;
+            padding: 10px 16px; border-radius: 12px;
+            font-size: 13px; font-weight: 600;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+            animation: floatBadge 3s ease-in-out infinite;
+        }
+        @keyframes floatBadge {
+            0%,100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
         .hero-stats {
-            display: flex;
-            justify-content: center;
-            gap: 48px;
-            margin-top: 48px;
+            display: flex; justify-content: flex-start; gap: 40px;
+            margin-top: 40px; padding: 24px 0;
+            border-top: 1px solid rgba(255,255,255,0.15);
         }
-
-        .hero-stat {
-            text-align: center;
-        }
-
         .hero-stat .num {
-            font-size: 28px;
-            font-weight: 700;
-            display: block;
+            font-size: 30px; font-weight: 800; display: block;
+            text-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
+        .hero-stat .label { font-size: 13px; opacity: 0.8; margin-top: 2px; }
 
-        .hero-stat .label {
-            font-size: 13px;
-            opacity: 0.75;
-            margin-top: 4px;
-        }
+        /* ========== Wave Divider ========== */
+        .wave-divider { position: relative; width: 100%; overflow: hidden; line-height: 0; }
+        .wave-divider svg { display: block; width: 100%; height: 60px; }
+        .wave-divider.flip { transform: rotate(180deg); }
 
         /* ========== 功能展示区 ========== */
-        .features {
-            padding: 80px 0;
-            background: #f0f2f5;
-        }
-
+        .features { padding: 80px 0; background: #f8f9fc; }
         .section-title {
-            text-align: center;
-            font-size: 32px;
-            font-weight: 700;
-            margin-bottom: 12px;
-            color: #1f2937;
+            text-align: center; font-size: 32px; font-weight: 800;
+            margin-bottom: 12px; color: #1f2937; letter-spacing: -0.3px;
         }
-
         .section-subtitle {
-            text-align: center;
-            font-size: 15px;
-            color: #6b7280;
-            margin-bottom: 48px;
+            text-align: center; font-size: 15px; color: #8b8fa3;
+            margin-bottom: 48px; max-width: 500px; margin-left: auto; margin-right: auto;
         }
-
         .feature-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 20px;
+            display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px;
+            max-width: 1000px; margin: 0 auto;
         }
-
-        /* 第一行4个，第二行3个居中 */
-        .feature-grid .feature-card-link:nth-child(n+5) {
-            /* 第二行的卡片 */
-        }
-
-        .feature-grid-wrapper {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        .feature-row {
-            display: flex;
-            gap: 20px;
-            justify-content: center;
-            width: 100%;
-        }
-
-        .feature-row + .feature-row {
-            margin-top: 20px;
-        }
-
+        .feature-grid .feature-card-link:nth-child(5) { grid-column: 1; }
         .feature-card-link {
-            text-decoration: none;
-            color: inherit;
-            display: block;
-            flex: 1;
-            max-width: 270px;
+            text-decoration: none; color: inherit; display: block; cursor: pointer;
         }
-
         .feature-card {
-            background: #fff;
-            padding: 28px 24px;
-            border-radius: 12px;
-            border: 1px solid #e5e7eb;
-            transition: all 0.2s;
-            display: flex;
-            flex-direction: column;
-            align-items: flex-start;
+            background: #fff; padding: 24px 20px; border-radius: 16px;
+            border: 1px solid #eceef3; transition: all 0.3s ease;
+            display: flex; flex-direction: column; align-items: flex-start;
+            box-shadow: 0 2px 8px rgba(99,102,241,0.04);
+            height: 100%;
         }
-
         .feature-card:hover {
-            border-color: #1a56db;
-            box-shadow: 0 4px 16px rgba(26,86,219,0.1);
-            transform: translateY(-2px);
+            border-color: #c7d2fe; transform: translateY(-4px);
+            box-shadow: 0 12px 36px rgba(99,102,241,0.12);
         }
-
         .feature-icon {
-            width: 36px;
-            height: 36px;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 14px;
-            font-weight: 700;
-            color: #fff;
-            margin-bottom: 16px;
-            flex-shrink: 0;
+            width: 44px; height: 44px; border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 16px; font-weight: 700; color: #fff;
+            margin-bottom: 16px; flex-shrink: 0;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         }
-
-        .feature-icon.c1 { background: #1a56db; }
-        .feature-icon.c2 { background: #059669; }
-        .feature-icon.c3 { background: #d97706; }
-        .feature-icon.c4 { background: #7c3aed; }
-        .feature-icon.c5 { background: #0891b2; }
-        .feature-icon.c6 { background: #4f46e5; }
-        .feature-icon.c7 { background: #be185d; }
-
-        .feature-card h3 {
-            font-size: 16px;
-            font-weight: 600;
-            margin-bottom: 8px;
-            color: #1f2937;
-        }
-
-        .feature-card p {
-            font-size: 13px;
-            color: #6b7280;
-            line-height: 1.6;
-        }
-
+        .feature-icon.c1 { background: linear-gradient(135deg, #667eea, #764ba2); }
+        .feature-icon.c2 { background: linear-gradient(135deg, #34d399, #059669); }
+        .feature-icon.c3 { background: linear-gradient(135deg, #fbbf24, #d97706); }
+        .feature-icon.c4 { background: linear-gradient(135deg, #a78bfa, #7c3aed); }
+        .feature-icon.c5 { background: linear-gradient(135deg, #22d3ee, #0891b2); }
+        .feature-icon.c6 { background: linear-gradient(135deg, #818cf8, #4f46e5); }
+        .feature-icon.c7 { background: linear-gradient(135deg, #f472b6, #be185d); }
+        .feature-card h3 { font-size: 16px; font-weight: 700; margin-bottom: 8px; color: #1f2937; }
+        .feature-card p { font-size: 13px; color: #8b8fa3; line-height: 1.6; }
         .feature-card .feature-arrow {
-            margin-top: auto;
-            padding-top: 12px;
-            font-size: 13px;
-            color: #1a56db;
-            font-weight: 500;
+            margin-top: auto; padding-top: 14px; font-size: 13px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+            font-weight: 600;
         }
+
+        /* ========== 功能详情区 ========== */
+        .feature-details { padding: 40px 0; background: #f8f9fc; }
+        .fd-section {
+            padding: 60px 0; position: relative;
+        }
+        .fd-section:nth-child(even) { background: #fff; }
+        .fd-inner {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center;
+        }
+        .fd-section:nth-child(even) .fd-inner { direction: rtl; }
+        .fd-section:nth-child(even) .fd-inner > * { direction: ltr; }
+        .fd-content {}
+        .fd-emoji { font-size: 40px; margin-bottom: 12px; display: block; }
+        .fd-title { font-size: 26px; font-weight: 800; color: #1f2937; margin-bottom: 12px; }
+        .fd-desc { font-size: 15px; color: #6b7280; line-height: 1.8; margin-bottom: 20px; }
+        .fd-highlights { list-style: none; margin-bottom: 24px; }
+        .fd-highlights li {
+            padding: 8px 0; font-size: 14px; color: #374151;
+            display: flex; align-items: flex-start; gap: 10px; line-height: 1.6;
+        }
+        .fd-highlights li::before {
+            content: '✓'; display: inline-flex; align-items: center; justify-content: center;
+            width: 22px; height: 22px; border-radius: 6px; flex-shrink: 0;
+            background: linear-gradient(135deg, #eef2ff, #e0e7ff);
+            color: #667eea; font-size: 12px; font-weight: 700;
+        }
+        .fd-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+        .fd-tag {
+            padding: 5px 12px; border-radius: 8px; font-size: 12px; font-weight: 600;
+            background: #f0f0ff; color: #667eea;
+        }
+        .fd-cta {
+            display: inline-flex; align-items: center; gap: 6px;
+            font-size: 14px; font-weight: 600; text-decoration: none;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+            transition: gap 0.2s ease;
+        }
+        .fd-cta:hover { gap: 10px; }
+        .fd-image { position: relative; }
+        .fd-image img {
+            width: 100%; border-radius: 20px;
+            box-shadow: 0 12px 40px rgba(99,102,241,0.12);
+            border: 1px solid rgba(236,238,243,0.6);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .fd-image img:hover { transform: scale(1.02); box-shadow: 0 16px 50px rgba(99,102,241,0.18); }
 
         /* ========== 效果演示区 ========== */
-        .demo {
-            padding: 80px 0;
-            background: #fff;
-        }
-
-        .demo-content {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 40px;
-            align-items: center;
-        }
-
-        .demo-text h3 {
-            font-size: 24px;
-            font-weight: 700;
-            margin-bottom: 16px;
-            color: #1f2937;
-        }
-
-        .demo-text p {
-            color: #4b5563;
-            margin-bottom: 12px;
-            font-size: 14px;
-            line-height: 1.8;
-        }
-
+        .demo { padding: 80px 0; background: #fff; }
+        .demo-content { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: center; }
+        .demo-text h3 { font-size: 26px; font-weight: 800; margin-bottom: 16px; color: #1f2937; }
+        .demo-text p { color: #4b5063; margin-bottom: 12px; font-size: 14px; line-height: 1.8; }
         .demo-text .demo-tag {
             display: inline-block;
-            background: #eff6ff;
-            color: #1a56db;
-            padding: 4px 12px;
-            border-radius: 4px;
-            font-size: 12px;
-            font-weight: 600;
-            margin-right: 8px;
-            margin-top: 16px;
+            background: linear-gradient(135deg, #eef2ff, #e0e7ff);
+            color: #667eea; padding: 5px 14px; border-radius: 8px;
+            font-size: 12px; font-weight: 600; margin-right: 8px; margin-top: 16px;
         }
-
         .demo-box {
-            background: #f9fafb;
-            padding: 24px;
-            border-radius: 12px;
-            border: 1px solid #e5e7eb;
+            background: #f8f9fc; padding: 28px; border-radius: 18px;
+            border: 1px solid #eceef3;
+            box-shadow: 0 4px 20px rgba(99,102,241,0.06);
         }
-
         .demo-box .demo-label {
-            font-size: 12px;
-            font-weight: 600;
-            color: #6b7280;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 12px;
+            font-size: 12px; font-weight: 700; color: #667eea;
+            text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 14px;
+            display: flex; align-items: center; gap: 6px;
         }
-
         .demo-box pre {
-            background: #fff;
-            padding: 16px;
-            border-radius: 8px;
-            border: 1px solid #e5e7eb;
-            overflow-x: auto;
-            font-size: 13px;
-            line-height: 1.7;
-            color: #374151;
+            background: #fff; padding: 18px; border-radius: 12px;
+            border: 1px solid #eceef3; overflow-x: auto;
+            font-size: 13px; line-height: 1.7; color: #374151;
             font-family: "SF Mono", "Monaco", "Cascadia Code", "Courier New", monospace;
         }
 
+        /* ========== 视频展示区 ========== */
+        .video-section {
+            padding: 80px 0; position: relative; overflow: hidden;
+            background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #3730a3 100%);
+            color: #fff;
+        }
+        .video-section::before {
+            content: ''; position: absolute; top: -100px; right: -100px;
+            width: 400px; height: 400px;
+            background: radial-gradient(circle, rgba(102,126,234,0.2), transparent 70%);
+            border-radius: 50%;
+        }
+        .video-section .section-title { color: #fff; }
+        .video-section .section-subtitle { color: rgba(255,255,255,0.7); }
+        .video-player-wrapper {
+            position: relative; max-width: 800px; margin: 0 auto;
+            border-radius: 20px; overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+            border: 2px solid rgba(255,255,255,0.1);
+        }
+        .video-player-wrapper img {
+            width: 100%; display: block;
+            filter: brightness(0.7);
+        }
+        .video-play-btn {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 80px; height: 80px; border-radius: 50%;
+            background: rgba(255,255,255,0.2); backdrop-filter: blur(10px);
+            border: 2px solid rgba(255,255,255,0.4);
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; transition: all 0.3s ease;
+        }
+        .video-play-btn:hover {
+            background: rgba(255,255,255,0.3); transform: translate(-50%, -50%) scale(1.08);
+        }
+        .video-play-btn::after {
+            content: ''; width: 0; height: 0;
+            border-left: 24px solid #fff; border-top: 14px solid transparent; border-bottom: 14px solid transparent;
+            margin-left: 4px;
+        }
+
+        /* ========== 数据统计区 ========== */
+        .stats-section { padding: 80px 0; background: #f8f9fc; }
+        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; max-width: 900px; margin: 0 auto; }
+        .stat-card {
+            background: #fff; padding: 32px 20px; border-radius: 18px;
+            border: 1px solid #eceef3; text-align: center;
+            box-shadow: 0 2px 12px rgba(99,102,241,0.04);
+            transition: all 0.3s ease;
+        }
+        .stat-card:hover { transform: translateY(-4px); box-shadow: 0 8px 30px rgba(99,102,241,0.1); }
+        .stat-emoji { font-size: 32px; margin-bottom: 8px; display: block; }
+        .stat-num {
+            font-size: 36px; font-weight: 800; display: block;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+        }
+        .stat-label { font-size: 13px; color: #8b8fa3; margin-top: 6px; font-weight: 500; }
+
+        /* ========== 用户好评区 ========== */
+        .testimonials { padding: 80px 0; background: #fff; }
+        .testimonial-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; max-width: 1000px; margin: 0 auto; }
+        .testimonial-card {
+            background: #f8f9fc; padding: 28px; border-radius: 18px;
+            border: 1px solid #eceef3; transition: all 0.3s ease;
+        }
+        .testimonial-card:hover { transform: translateY(-3px); box-shadow: 0 8px 30px rgba(99,102,241,0.08); }
+        .testimonial-stars { color: #fbbf24; font-size: 16px; margin-bottom: 12px; letter-spacing: 2px; }
+        .testimonial-text { font-size: 14px; color: #4b5063; line-height: 1.8; margin-bottom: 16px; }
+        .testimonial-author { display: flex; align-items: center; gap: 10px; }
+        .testimonial-avatar {
+            width: 40px; height: 40px; border-radius: 50%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            display: flex; align-items: center; justify-content: center;
+            color: #fff; font-size: 14px; font-weight: 700;
+        }
+        .testimonial-info .t-name { font-size: 14px; font-weight: 600; color: #1f2937; }
+        .testimonial-info .t-role { font-size: 12px; color: #8b8fa3; }
+
+        /* ========== 未来教育Banner ========== */
+        .future-banner {
+            position: relative; padding: 80px 0; overflow: hidden;
+            background: linear-gradient(135deg, #1e1b4b, #312e81);
+            color: #fff;
+        }
+        .future-banner .container { position: relative; z-index: 2; }
+        .future-banner-inner { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: center; }
+        .future-banner-text h2 { font-size: 32px; font-weight: 800; margin-bottom: 16px; }
+        .future-banner-text p { font-size: 16px; opacity: 0.85; line-height: 1.8; margin-bottom: 24px; }
+        .future-banner-text img {
+            width: 100%; border-radius: 20px;
+            box-shadow: 0 16px 50px rgba(0,0,0,0.3);
+            border: 2px solid rgba(255,255,255,0.1);
+        }
+
         /* ========== 定价区 ========== */
-        .pricing {
-            padding: 80px 0;
-            background: #f0f2f5;
-        }
-
+        .pricing { padding: 80px 0; background: #f8f9fc; }
         .pricing-free {
-            background: #fff;
-            border: 1px solid #e5e7eb;
-            border-radius: 12px;
-            padding: 24px 32px;
-            margin-bottom: 32px;
-            display: flex;
-            align-items: center;
-            gap: 16px;
+            background: linear-gradient(135deg, #f0fdf4, #ecfdf5); border: 1.5px solid #bbf7d0;
+            border-radius: 16px; padding: 24px 32px; margin-bottom: 36px;
+            display: flex; align-items: center; gap: 16px;
+            box-shadow: 0 2px 12px rgba(5,150,105,0.06);
+            max-width: 700px; margin-left: auto; margin-right: auto;
         }
-
         .pricing-free-icon {
-            width: 40px;
-            height: 40px;
-            background: #f0fdf4;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #059669;
-            font-size: 16px;
-            font-weight: 700;
-            flex-shrink: 0;
+            width: 48px; height: 48px; background: linear-gradient(135deg, #34d399, #059669);
+            border-radius: 14px; display: flex; align-items: center; justify-content: center;
+            color: #fff; font-size: 18px; font-weight: 700; flex-shrink: 0;
+            box-shadow: 0 4px 12px rgba(5,150,105,0.2);
         }
-
-        .pricing-free-text h4 {
-            font-size: 15px;
-            font-weight: 600;
-            color: #1f2937;
-        }
-
-        .pricing-free-text p {
-            font-size: 13px;
-            color: #6b7280;
-            margin-top: 2px;
-        }
-
-        .pricing-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 20px;
-            max-width: 900px;
-            margin: 0 auto;
-        }
-
+        .pricing-free-text h4 { font-size: 16px; font-weight: 700; color: #166534; }
+        .pricing-free-text p { font-size: 13px; color: #166534; margin-top: 2px; opacity: 0.8; }
+        .pricing-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; max-width: 900px; margin: 0 auto; }
         .pricing-card {
-            background: #fff;
-            padding: 32px 28px;
-            border-radius: 12px;
-            border: 1px solid #e5e7eb;
-            text-align: center;
-            position: relative;
-            transition: all 0.2s;
+            background: #fff; padding: 36px 28px; border-radius: 20px;
+            border: 1.5px solid #eceef3; text-align: center; position: relative;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 12px rgba(99,102,241,0.04);
         }
-
-        .pricing-card:hover {
-            box-shadow: 0 4px 16px rgba(0,0,0,0.06);
-        }
-
+        .pricing-card:hover { transform: translateY(-4px); box-shadow: 0 12px 40px rgba(99,102,241,0.1); }
         .pricing-card.featured {
-            border-color: #1a56db;
-            box-shadow: 0 4px 16px rgba(26,86,219,0.12);
+            border-color: #667eea;
+            box-shadow: 0 8px 30px rgba(102,126,234,0.15);
+            transform: scale(1.03);
         }
-
+        .pricing-card.featured:hover { transform: scale(1.03) translateY(-4px); }
         .pricing-badge {
-            position: absolute;
-            top: -10px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: #d97706;
-            color: #fff;
-            padding: 3px 14px;
-            border-radius: 12px;
-            font-size: 12px;
-            font-weight: 600;
+            position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
+            background: linear-gradient(135deg, #fbbf24, #d97706);
+            color: #fff; padding: 4px 16px; border-radius: 8px;
+            font-size: 12px; font-weight: 700;
+            box-shadow: 0 2px 8px rgba(217,119,6,0.3);
         }
-
-        .pricing-card h3 {
-            font-size: 18px;
-            font-weight: 600;
-            margin-bottom: 8px;
-            color: #1f2937;
-        }
-
+        .pricing-card h3 { font-size: 18px; font-weight: 700; margin-bottom: 8px; color: #1f2937; }
         .pricing-price {
-            font-size: 36px;
-            font-weight: 700;
-            margin: 16px 0;
-            color: #1f2937;
+            font-size: 38px; font-weight: 800; margin: 16px 0;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
         }
-
-        .pricing-price span {
-            font-size: 14px;
-            font-weight: 400;
-            color: #6b7280;
-        }
-
-        .pricing-desc {
-            font-size: 13px;
-            color: #6b7280;
-            margin-bottom: 20px;
-        }
-
-        .pricing-features {
-            list-style: none;
-            margin: 20px 0;
-            text-align: left;
-        }
-
+        .pricing-price span { font-size: 14px; font-weight: 400; -webkit-text-fill-color: #8b8fa3; }
+        .pricing-desc { font-size: 13px; color: #8b8fa3; margin-bottom: 20px; }
+        .pricing-features { list-style: none; margin: 20px 0; text-align: left; }
         .pricing-features li {
-            padding: 8px 0;
-            font-size: 13px;
-            color: #4b5563;
-            border-bottom: 1px solid #f3f4f6;
-            display: flex;
-            align-items: center;
-            gap: 8px;
+            padding: 9px 0; font-size: 13px; color: #4b5063;
+            border-bottom: 1px solid #f3f4f6; display: flex; align-items: center; gap: 10px;
         }
-
-        .pricing-features li:last-child {
-            border-bottom: none;
-        }
-
+        .pricing-features li:last-child { border-bottom: none; }
         .pricing-features li::before {
-            content: "";
-            width: 16px;
-            height: 16px;
-            background: #f0fdf4;
-            border-radius: 4px;
-            flex-shrink: 0;
+            content: ""; width: 18px; height: 18px; background: #f0fdf4; border-radius: 6px; flex-shrink: 0;
             background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='8' viewBox='0 0 10 8'%3E%3Cpath d='M1 4l2.5 2.5L9 1' stroke='%23059669' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-            background-repeat: no-repeat;
-            background-position: center;
+            background-repeat: no-repeat; background-position: center;
         }
-
         .pricing-card.featured .pricing-features li::before {
-            background-color: #eff6ff;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='8' viewBox='0 0 10 8'%3E%3Cpath d='M1 4l2.5 2.5L9 1' stroke='%231a56db' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+            background-color: #eef2ff;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='8' viewBox='0 0 10 8'%3E%3Cpath d='M1 4l2.5 2.5L9 1' stroke='%23667eea' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
         }
-
         .pricing-cta {
-            display: inline-block;
-            padding: 10px 28px;
-            border-radius: 6px;
-            font-size: 14px;
-            font-weight: 600;
-            text-decoration: none;
-            transition: all 0.15s;
-            margin-top: 8px;
+            display: inline-block; padding: 12px 32px; border-radius: 12px;
+            font-size: 14px; font-weight: 700; text-decoration: none;
+            transition: all 0.25s ease; margin-top: 10px;
         }
-
         .pricing-cta.default {
-            background: #f3f4f6;
-            color: #374151;
+            background: #f8f9fc; color: #4b5063; border: 1.5px solid #d5d8e0;
         }
-
-        .pricing-cta.default:hover {
-            background: #e5e7eb;
-        }
-
+        .pricing-cta.default:hover { background: #f0f0ff; border-color: #667eea; color: #667eea; }
         .pricing-cta.primary {
-            background: #1a56db;
-            color: #fff;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: #fff; box-shadow: 0 4px 14px rgba(102,126,234,0.3);
         }
-
-        .pricing-cta.primary:hover {
-            background: #1e40af;
-        }
+        .pricing-cta.primary:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(102,126,234,0.4); }
 
         /* ========== 页脚 ========== */
         .footer {
-            background: #1f2937;
-            color: #fff;
-            padding: 40px 0;
+            background: linear-gradient(180deg, #1e1b4b, #0f0d2e);
+            color: #fff; padding: 48px 0 32px;
         }
-
-        .footer-content {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+        .footer-content { display: flex; justify-content: space-between; align-items: flex-start; gap: 40px; }
+        .footer-left .footer-brand { font-size: 18px; font-weight: 700; margin-bottom: 10px; }
+        .footer-left p { font-size: 13px; opacity: 0.6; line-height: 1.7; max-width: 320px; }
+        .footer-links { display: flex; gap: 48px; }
+        .footer-col h4 { font-size: 13px; font-weight: 700; margin-bottom: 12px; opacity: 0.8; text-transform: uppercase; letter-spacing: 0.5px; }
+        .footer-col a { display: block; font-size: 13px; color: rgba(255,255,255,0.6); text-decoration: none; margin-bottom: 8px; transition: color 0.2s; }
+        .footer-col a:hover { color: #fff; }
+        .footer-bottom {
+            margin-top: 32px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.08);
+            display: flex; justify-content: space-between; align-items: center;
         }
-
-        .footer-left .footer-brand {
-            font-size: 16px;
-            font-weight: 600;
-            margin-bottom: 8px;
-        }
-
-        .footer-left p {
-            font-size: 13px;
-            opacity: 0.6;
-        }
-
-        .footer-right {
-            text-align: right;
-        }
-
-        .footer-right p {
-            font-size: 13px;
-            opacity: 0.6;
-            margin-bottom: 4px;
-        }
-
-        .footer-right a {
-            color: #93c5fd;
-            text-decoration: none;
-            font-size: 13px;
-        }
-
-        .footer-right a:hover {
-            color: #fff;
-        }
+        .footer-bottom p { font-size: 12px; opacity: 0.4; }
+        .footer-bottom a { color: rgba(255,255,255,0.6); text-decoration: none; font-size: 12px; }
+        .footer-bottom a:hover { color: #fff; }
 
         /* ========== 动画 ========== */
-        @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .animate-in {
-            animation: fadeInUp 0.5s ease;
-        }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-in { animation: fadeInUp 0.6s ease; }
 
         /* ========== 响应式 ========== */
         @media (max-width: 768px) {
-            .container {
-                padding: 0 16px;
-            }
+            .container { padding: 0 16px; }
+            .nav-links { display: none; }
+            .hamburger { display: flex; }
+            .navbar .container { padding: 0 16px; }
 
-            /* 导航 */
-            .nav-links {
-                display: none;
-            }
+            .hero { padding: 40px 0 0; }
+            .hero-inner { grid-template-columns: 1fr; gap: 32px; text-align: center; }
+            .hero-text h1 { font-size: 28px; }
+            .hero-text p { font-size: 15px; margin-bottom: 24px; margin-left: auto; margin-right: auto; }
+            .hero-btns { justify-content: center; }
+            .hero-stats { justify-content: center; gap: 24px; }
+            .hero-stat .num { font-size: 24px; }
+            .hero-image { order: -1; }
+            .hero-image img { max-width: 320px; }
+            .hero-image .floating-badge { display: none; }
 
-            .hamburger {
-                display: flex;
-            }
+            .features { padding: 48px 0; }
+            .section-title { font-size: 24px; }
+            .section-subtitle { font-size: 13px; margin-bottom: 32px; }
+            .feature-grid { grid-template-columns: 1fr 1fr; gap: 12px; }
 
-            .navbar .container {
-                padding: 0 16px;
-            }
+            .fd-section { padding: 40px 0; }
+            .fd-inner { grid-template-columns: 1fr; gap: 24px; }
+            .fd-section:nth-child(even) .fd-inner { direction: ltr; }
+            .fd-title { font-size: 22px; }
+            .fd-image { order: -1; }
 
-            /* Hero */
-            .hero {
-                padding: 60px 0;
-            }
+            .demo { padding: 48px 0; }
+            .demo-content { grid-template-columns: 1fr; gap: 24px; }
 
-            .hero h1 {
-                font-size: 28px;
-            }
+            .video-section { padding: 48px 0; }
+            .video-player-wrapper { margin: 0 -8px; }
 
-            .hero p {
-                font-size: 15px;
-                margin-bottom: 28px;
-                padding: 0 8px;
-            }
+            .stats-section { padding: 48px 0; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+            .stat-num { font-size: 28px; }
 
-            .hero-cta {
-                padding: 12px 32px;
-                font-size: 15px;
-            }
+            .testimonials { padding: 48px 0; }
+            .testimonial-grid { grid-template-columns: 1fr; gap: 16px; }
 
-            .hero-stats {
-                gap: 24px;
-                margin-top: 36px;
-            }
+            .future-banner { padding: 48px 0; }
+            .future-banner-inner { grid-template-columns: 1fr; gap: 24px; text-align: center; }
+            .future-banner-text h2 { font-size: 24px; }
 
-            .hero-stat .num {
-                font-size: 22px;
-            }
+            .pricing { padding: 48px 0; }
+            .pricing-free { padding: 16px 20px; }
+            .pricing-grid { grid-template-columns: 1fr; gap: 16px; }
+            .pricing-card.featured { transform: none; }
+            .pricing-card.featured:hover { transform: translateY(-4px); }
 
-            .hero-stat .label {
-                font-size: 12px;
-            }
-
-            /* 功能区 */
-            .features {
-                padding: 48px 0;
-            }
-
-            .section-title {
-                font-size: 24px;
-                margin-bottom: 8px;
-            }
-
-            .section-subtitle {
-                font-size: 13px;
-                margin-bottom: 28px;
-            }
-
-            .feature-row {
-                flex-direction: column;
-                gap: 12px;
-                align-items: stretch;
-            }
-
-            .feature-card-link {
-                max-width: none;
-            }
-
-            .feature-card {
-                padding: 20px;
-                border-radius: 10px;
-            }
-
-            .feature-card:hover {
-                transform: none;
-            }
-
-            .feature-row + .feature-row {
-                margin-top: 12px;
-            }
-
-            /* 演示区 */
-            .demo {
-                padding: 48px 0;
-            }
-
-            .demo-content {
-                grid-template-columns: 1fr;
-                gap: 24px;
-            }
-
-            .demo-text h3 {
-                font-size: 20px;
-            }
-
-            /* 定价区 */
-            .pricing {
-                padding: 48px 0;
-            }
-
-            .pricing-free {
-                padding: 16px 20px;
-                margin-bottom: 20px;
-            }
-
-            .pricing-grid {
-                grid-template-columns: 1fr;
-                gap: 16px;
-            }
-
-            .pricing-card {
-                padding: 24px 20px;
-            }
-
-            .pricing-card.featured {
-                transform: none;
-            }
-
-            /* 页脚 */
-            .footer {
-                padding: 32px 0;
-            }
-
-            .footer-content {
-                flex-direction: column;
-                text-align: center;
-                gap: 16px;
-            }
-
-            .footer-right {
-                text-align: center;
-            }
+            .footer { padding: 36px 0 24px; }
+            .footer-content { flex-direction: column; gap: 24px; }
+            .footer-links { flex-wrap: wrap; gap: 24px; }
+            .footer-bottom { flex-direction: column; gap: 8px; text-align: center; }
         }
 
         @media (min-width: 769px) and (max-width: 1024px) {
-            .feature-row .feature-card-link {
-                max-width: 240px;
-            }
+            .feature-grid { grid-template-columns: repeat(3, 1fr); }
+            .hero h1 { font-size: 36px; }
+            .fd-inner { gap: 32px; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+        }
 
-            .hero h1 {
-                font-size: 36px;
+        /* ========== Scrollbar ========== */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #c7c9d1; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #a5a8c0; }
+
+        ::selection { background: rgba(102,126,234,0.15); color: #1f2937; }
+
+        /* ========== PWA Install Section ========== */
+        .pwa-install-section {
+            padding: 48px 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            position: relative;
+            overflow: hidden;
+        }
+        .pwa-install-section::before {
+            content: ''; position: absolute; top: -80px; right: -60px;
+            width: 300px; height: 300px;
+            background: radial-gradient(circle, rgba(255,255,255,0.08), transparent 70%);
+            border-radius: 50%;
+        }
+        .pwa-install-card {
+            background: rgba(255,255,255,0.12);
+            backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 20px;
+            padding: 36px 40px;
+            display: flex; align-items: center; gap: 32px;
+            position: relative; z-index: 1;
+            max-width: 800px; margin: 0 auto;
+            color: #fff;
+        }
+        .pwa-install-icon {
+            width: 64px; height: 64px; border-radius: 18px;
+            background: rgba(255,255,255,0.2);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 28px; flex-shrink: 0;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+        }
+        .pwa-install-text { flex: 1; }
+        .pwa-install-text h3 {
+            font-size: 20px; font-weight: 700; margin-bottom: 6px;
+        }
+        .pwa-install-text p {
+            font-size: 14px; opacity: 0.85; line-height: 1.6;
+        }
+        .pwa-install-btn {
+            flex-shrink: 0;
+            padding: 12px 28px; border-radius: 12px;
+            background: #fff; color: #667eea;
+            font-size: 14px; font-weight: 700;
+            border: none; cursor: pointer;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+            transition: all 0.25s ease;
+            white-space: nowrap;
+        }
+        .pwa-install-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 24px rgba(0,0,0,0.15);
+        }
+        .pwa-install-btn.installed {
+            background: rgba(255,255,255,0.2); color: #fff;
+            cursor: default; pointer-events: none;
+        }
+        .pwa-install-steps {
+            margin-top: 16px; font-size: 12px; opacity: 0.7;
+            display: none;
+        }
+        .pwa-install-steps.show { display: block; }
+        .pwa-install-steps ol {
+            padding-left: 20px; text-align: left;
+        }
+        .pwa-install-steps li { margin-bottom: 4px; }
+
+        @media (max-width: 768px) {
+            .pwa-install-section { padding: 32px 0; }
+            .pwa-install-card {
+                flex-direction: column; text-align: center;
+                padding: 28px 24px; gap: 16px;
             }
+            .pwa-install-text h3 { font-size: 18px; }
+            .pwa-install-btn { width: 100%; }
+            .pwa-install-steps { text-align: left; }
         }
     </style>
 </head>
@@ -819,133 +662,350 @@
     <nav class="navbar">
         <div class="container">
             <div class="logo">
-                <div class="logo-icon">师</div>
+                <div class="logo-icon">🎓</div>
                 老师的小能手
             </div>
             <ul class="nav-links">
                 <li><a href="#features">核心功能</a></li>
+                <li><a href="#details">功能详情</a></li>
                 <li><a href="#demo">效果演示</a></li>
                 <li><a href="#pricing">服务定价</a></li>
-                <li><a href="./chat.html" class="nav-cta">立即使用</a></li>
+                <li><a href="./chat.html" class="nav-cta">登录 / 注册</a></li>
             </ul>
             <button class="hamburger" id="hamburger" aria-label="菜单">
-                <span></span>
-                <span></span>
-                <span></span>
+                <span></span><span></span><span></span>
             </button>
         </div>
         <div class="mobile-nav" id="mobileNav">
             <a href="#features">核心功能</a>
+            <a href="#details">功能详情</a>
             <a href="#demo">效果演示</a>
             <a href="#pricing">服务定价</a>
-            <a href="./chat.html">立即使用</a>
+            <a href="./chat.html">登录 / 注册</a>
         </div>
     </nav>
 
     <!-- Hero 区域 -->
     <section class="hero">
         <div class="container">
-            <h1>AI帮老师减负增效</h1>
-            <p>一键生成教案、智能出题、教学建议<br>让备课从2小时缩短到10分钟</p>
-            <a href="./chat.html" class="hero-cta">立即体验</a>
-            <div class="hero-stats">
-                <div class="hero-stat">
-                    <span class="num">10万+</span>
-                    <span class="label">教案已生成</span>
+            <div class="hero-inner">
+                <div class="hero-text">
+                    <h1>AI帮老师<br><span class="highlight">减负增效</span></h1>
+                    <p>一键生成教案、智能出题、教学建议、德育助手……<br>让备课从2小时缩短到10分钟，把时间还给教育本身。</p>
+                    <div class="hero-btns">
+                        <a href="#features" class="hero-cta">✨ 了解功能</a>
+                        <a href="./chat.html" class="hero-cta-secondary">免费注册 →</a>
+                    </div>
+                    <div class="hero-stats">
+                        <div class="hero-stat">
+                            <span class="num">10万+</span>
+                            <span class="label">教案已生成</span>
+                        </div>
+                        <div class="hero-stat">
+                            <span class="num">95%</span>
+                            <span class="label">教师满意度</span>
+                        </div>
+                        <div class="hero-stat">
+                            <span class="num">2min</span>
+                            <span class="label">平均生成时间</span>
+                        </div>
+                    </div>
                 </div>
-                <div class="hero-stat">
-                    <span class="num">95%</span>
-                    <span class="label">教师满意度</span>
-                </div>
-                <div class="hero-stat">
-                    <span class="num">2min</span>
-                    <span class="label">平均生成时间</span>
+                <div class="hero-image">
+                    <img src="./imgs/260724_00_生图/img_1.jpg" alt="老师使用AI助手">
+                    <div class="floating-badge">⚡ 10秒生成完整教案</div>
                 </div>
             </div>
         </div>
     </section>
 
+    <!-- Wave divider -->
+    <div class="wave-divider">
+        <svg viewBox="0 0 1440 60" preserveAspectRatio="none">
+            <path d="M0,0 C480,60 960,60 1440,0 L1440,60 L0,60 Z" fill="#f8f9fc"/>
+        </svg>
+    </div>
+
     <!-- 功能展示 -->
     <section id="features" class="features">
         <div class="container">
-            <h2 class="section-title">七大核心功能</h2>
+            <h2 class="section-title">✨ 七大核心功能</h2>
             <p class="section-subtitle">覆盖备课、出题、德育、教务全场景，一个助手全部搞定</p>
-            <div class="feature-grid-wrapper">
-                <div class="feature-row">
-                    <a href="./chat.html?service=jiaoan" class="feature-card-link">
-                        <div class="feature-card">
-                            <div class="feature-icon c1">教</div>
-                            <h3>生成教案</h3>
-                            <p>输入课题自动生成完整教案，含教学目标、教学过程、板书设计</p>
-                            <div class="feature-arrow">了解详情 &rarr;</div>
+            <div class="feature-grid">
+                <a href="#fd-jiaoan" class="feature-card-link">
+                    <div class="feature-card">
+                        <div class="feature-icon c1">教</div>
+                        <h3>生成教案</h3>
+                        <p>输入课题自动生成完整教案，含教学目标、教学过程、板书设计</p>
+                        <div class="feature-arrow">了解详情 →</div>
+                    </div>
+                </a>
+                <a href="#fd-chujuan" class="feature-card-link">
+                    <div class="feature-card">
+                        <div class="feature-icon c2">卷</div>
+                        <h3>智能出卷</h3>
+                        <p>按知识点和题型生成试卷，含详细解析和评分标准</p>
+                        <div class="feature-arrow">了解详情 →</div>
+                    </div>
+                </a>
+                <a href="#fd-jianyi" class="feature-card-link">
+                    <div class="feature-card">
+                        <div class="feature-icon c3">议</div>
+                        <h3>教学建议</h3>
+                        <p>针对教学问题获取专业建议，结合教育理论和一线经验</p>
+                        <div class="feature-arrow">了解详情 →</div>
+                    </div>
+                </a>
+                <a href="#fd-deyu" class="feature-card-link">
+                    <div class="feature-card">
+                        <div class="feature-icon c4">德</div>
+                        <h3>德育助手</h3>
+                        <p>班会设计、学生评语、家校沟通，全方位支持班主任</p>
+                        <div class="feature-arrow">了解详情 →</div>
+                    </div>
+                </a>
+                <a href="#fd-jiaowu" class="feature-card-link">
+                    <div class="feature-card">
+                        <div class="feature-icon c5">务</div>
+                        <h3>教务助手</h3>
+                        <p>排课调课、成绩分析、学期计划，一站式教务处理</p>
+                        <div class="feature-arrow">了解详情 →</div>
+                    </div>
+                </a>
+                <a href="#fd-xiaozhang" class="feature-card-link">
+                    <div class="feature-card">
+                        <div class="feature-icon c6">校</div>
+                        <h3>校长小助手</h3>
+                        <p>公文、讲话稿、学校规划，支持上传附件智能处理</p>
+                        <div class="feature-arrow">了解详情 →</div>
+                    </div>
+                </a>
+                <a href="#fd-zhishidian" class="feature-card-link">
+                    <div class="feature-card">
+                        <div class="feature-icon c7">知</div>
+                        <h3>知识点总结</h3>
+                        <p>按章节梳理知识要点和框架，帮助学生系统复习</p>
+                        <div class="feature-arrow">了解详情 →</div>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- 功能详情区 -->
+    <section id="details" class="feature-details">
+
+        <!-- 1. 生成教案 -->
+        <div class="fd-section" id="fd-jiaoan">
+            <div class="container">
+                <div class="fd-inner">
+                    <div class="fd-content">
+                        <span class="fd-emoji">📖</span>
+                        <h3 class="fd-title">AI 智能生成教案</h3>
+                        <p class="fd-desc">输入学科、年级和课题，AI 自动生成符合课程标准的完整教案。包含三维教学目标、详细教学过程、板书设计和课后反思，可直接打印使用。</p>
+                        <ul class="fd-highlights">
+                            <li>三维目标自动生成（知识与技能 / 过程与方法 / 情感态度）</li>
+                            <li>完整教学流程设计：导入、新授、练习、小结</li>
+                            <li>板书设计 + 课后作业建议</li>
+                            <li>支持15个学科、12个学段全覆盖</li>
+                            <li>适配人教版、北师大版等10+教材版本</li>
+                        </ul>
+                        <div class="fd-tags">
+                            <span class="fd-tag">语文</span><span class="fd-tag">数学</span>
+                            <span class="fd-tag">英语</span><span class="fd-tag">物理</span>
+                            <span class="fd-tag">化学</span><span class="fd-tag">更多...</span>
                         </div>
-                    </a>
-                    <a href="./chat.html?service=chujuan" class="feature-card-link">
-                        <div class="feature-card">
-                            <div class="feature-icon c2">卷</div>
-                            <h3>智能出卷</h3>
-                            <p>按知识点和题型生成试卷，含详细解析和评分标准</p>
-                            <div class="feature-arrow">了解详情 &rarr;</div>
-                        </div>
-                    </a>
-                    <a href="./chat.html?service=jianyi" class="feature-card-link">
-                        <div class="feature-card">
-                            <div class="feature-icon c3">议</div>
-                            <h3>教学建议</h3>
-                            <p>针对教学问题获取专业建议，结合教育理论和一线经验</p>
-                            <div class="feature-arrow">了解详情 &rarr;</div>
-                        </div>
-                    </a>
-                    <a href="./chat.html?service=deyu" class="feature-card-link">
-                        <div class="feature-card">
-                            <div class="feature-icon c4">德</div>
-                            <h3>德育助手</h3>
-                            <p>班会设计、学生评语、家校沟通，全方位支持班主任</p>
-                            <div class="feature-arrow">了解详情 &rarr;</div>
-                        </div>
-                    </a>
-                </div>
-                <div class="feature-row">
-                    <a href="./chat.html?service=jiaowu" class="feature-card-link">
-                        <div class="feature-card">
-                            <div class="feature-icon c5">务</div>
-                            <h3>教务助手</h3>
-                            <p>排课调课、成绩分析、学期计划，一站式教务处理</p>
-                            <div class="feature-arrow">了解详情 &rarr;</div>
-                        </div>
-                    </a>
-                    <a href="./chat.html?service=xiaozhang" class="feature-card-link">
-                        <div class="feature-card">
-                            <div class="feature-icon c6">校</div>
-                            <h3>校长小助手</h3>
-                            <p>公文、讲话稿、学校规划，支持上传附件智能处理</p>
-                            <div class="feature-arrow">了解详情 &rarr;</div>
-                        </div>
-                    </a>
-                    <a href="./chat.html?service=zhishidian" class="feature-card-link">
-                        <div class="feature-card">
-                            <div class="feature-icon c7">知</div>
-                            <h3>知识点总结</h3>
-                            <p>按章节梳理知识要点和框架，帮助学生系统复习</p>
-                            <div class="feature-arrow">了解详情 &rarr;</div>
-                        </div>
-                    </a>
+                        <a href="./chat.html?service=jiaoan" class="fd-cta">去使用 →</a>
+                    </div>
+                    <div class="fd-image">
+                        <img src="./imgs/260724_00_生图/img_2.jpg" alt="AI辅助备课">
+                    </div>
                 </div>
             </div>
         </div>
+
+        <!-- 2. 智能出卷 -->
+        <div class="fd-section" id="fd-chujuan">
+            <div class="container">
+                <div class="fd-inner">
+                    <div class="fd-content">
+                        <span class="fd-emoji">📝</span>
+                        <h3 class="fd-title">智能出卷系统</h3>
+                        <p class="fd-desc">按知识点、题型和难度自动生成试卷。题目真实可靠，难度梯度科学（6:3:1），附带详细解析和评分标准，省去大量找题拼题时间。</p>
+                        <ul class="fd-highlights">
+                            <li>真实题目生成，拒绝胡编乱造</li>
+                            <li>科学难度梯度：基础60% + 中等30% + 拔高10%</li>
+                            <li>支持8种题型：选择、填空、判断、简答、计算、论述、应用、阅读理解</li>
+                            <li>每道题附带详细解析和评分标准</li>
+                            <li>一键导出 Word 文档，可直接打印</li>
+                        </ul>
+                        <div class="fd-tags">
+                            <span class="fd-tag">选择题</span><span class="fd-tag">填空题</span>
+                            <span class="fd-tag">简答题</span><span class="fd-tag">论述题</span>
+                            <span class="fd-tag">计算题</span><span class="fd-tag">更多...</span>
+                        </div>
+                        <a href="./chat.html?service=chujuan" class="fd-cta">去使用 →</a>
+                    </div>
+                    <div class="fd-image">
+                        <img src="./imgs/260724_00_生图/img_3.jpg" alt="智能出卷">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. 教学建议 -->
+        <div class="fd-section" id="fd-jianyi">
+            <div class="container">
+                <div class="fd-inner">
+                    <div class="fd-content">
+                        <span class="fd-emoji">💡</span>
+                        <h3 class="fd-title">专业教学建议</h3>
+                        <p class="fd-desc">描述您遇到的教学问题，AI 基于教育心理学框架和一线名师经验，为您提供多维度、可落地的教学策略和建议。</p>
+                        <ul class="fd-highlights">
+                            <li>基于教育心理学理论框架分析问题</li>
+                            <li>多维度策略：课堂管理 / 教学设计 / 评价方式</li>
+                            <li>家校合作建议，促进协同育人</li>
+                            <li>融合一线名师实践经验和案例</li>
+                            <li>针对性强，拒绝空泛理论</li>
+                        </ul>
+                        <div class="fd-tags">
+                            <span class="fd-tag">课堂管理</span><span class="fd-tag">教学设计</span>
+                            <span class="fd-tag">学情分析</span><span class="fd-tag">家校沟通</span>
+                        </div>
+                        <a href="./chat.html?service=jianyi" class="fd-cta">去使用 →</a>
+                    </div>
+                    <div class="fd-image">
+                        <img src="./imgs/260724_00_生图/img_4.jpg" alt="教学建议">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. 德育助手 -->
+        <div class="fd-section" id="fd-deyu">
+            <div class="container">
+                <div class="fd-inner">
+                    <div class="fd-content">
+                        <span class="fd-emoji">🌟</span>
+                        <h3 class="fd-title">班主任德育助手</h3>
+                        <p class="fd-desc">专为班主任设计，涵盖班会设计、学生评语、家校沟通和德育方案，融入社会主义核心价值观，让德育工作更高效、更有温度。</p>
+                        <ul class="fd-highlights">
+                            <li>主题班会设计方案（含流程、素材、互动环节）</li>
+                            <li>个性化学生评语（积极正面、因人而异）</li>
+                            <li>家校沟通话术模板和技巧指导</li>
+                            <li>德育主题活动方案设计</li>
+                            <li>自然融入社会主义核心价值观教育</li>
+                        </ul>
+                        <div class="fd-tags">
+                            <span class="fd-tag">班会设计</span><span class="fd-tag">学生评语</span>
+                            <span class="fd-tag">家校沟通</span><span class="fd-tag">德育方案</span>
+                        </div>
+                        <a href="./chat.html?service=deyu" class="fd-cta">去使用 →</a>
+                    </div>
+                    <div class="fd-image">
+                        <img src="./imgs/260724_00_生图/img_6.jpg" alt="德育助手">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 5. 教务助手 -->
+        <div class="fd-section" id="fd-jiaowu">
+            <div class="container">
+                <div class="fd-inner">
+                    <div class="fd-content">
+                        <span class="fd-emoji">📊</span>
+                        <h3 class="fd-title">教务工作助手</h3>
+                        <p class="fd-desc">一站式解决教务工作中的各类文档和数据处理需求，从排课调课到成绩分析，从学期计划到通知公告，让教务工作井然有序。</p>
+                        <ul class="fd-highlights">
+                            <li>排课调课方案生成与优化建议</li>
+                            <li>成绩分析报告自动生成（含数据可视化建议）</li>
+                            <li>学期工作计划、教学进度表</li>
+                            <li>通知公告、会议纪要模板</li>
+                            <li>考勤管理方案与统计工具</li>
+                        </ul>
+                        <div class="fd-tags">
+                            <span class="fd-tag">排课调课</span><span class="fd-tag">成绩分析</span>
+                            <span class="fd-tag">学期计划</span><span class="fd-tag">通知公告</span>
+                        </div>
+                        <a href="./chat.html?service=jiaowu" class="fd-cta">去使用 →</a>
+                    </div>
+                    <div class="fd-image">
+                        <img src="./imgs/260724_00_生图/img_7.jpg" alt="教务助手">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 6. 校长小助手 -->
+        <div class="fd-section" id="fd-xiaozhang">
+            <div class="container">
+                <div class="fd-inner">
+                    <div class="fd-content">
+                        <span class="fd-emoji">🏫</span>
+                        <h3 class="fd-title">校长小助手</h3>
+                        <p class="fd-desc">为学校管理层提供公文写作、讲话稿、学校发展规划等支持，紧跟教育政策热点，支持上传附件进行智能分析和处理。</p>
+                        <ul class="fd-highlights">
+                            <li>行政公文写作（通知、报告、请示、批复）</li>
+                            <li>各类讲话稿（开学致辞、家长会、教师大会）</li>
+                            <li>学校发展规划与年度工作报告</li>
+                            <li>支持上传附件（PDF/Word）智能分析处理</li>
+                            <li>紧跟最新教育政策和改革方向</li>
+                        </ul>
+                        <div class="fd-tags">
+                            <span class="fd-tag">公文写作</span><span class="fd-tag">讲话稿</span>
+                            <span class="fd-tag">学校规划</span><span class="fd-tag">政策分析</span>
+                        </div>
+                        <a href="./chat.html?service=xiaozhang" class="fd-cta">去使用 →</a>
+                    </div>
+                    <div class="fd-image">
+                        <img src="./imgs/260724_00_生图/img_2.jpg" alt="校长小助手">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 7. 知识点总结 -->
+        <div class="fd-section" id="fd-zhishidian">
+            <div class="container">
+                <div class="fd-inner">
+                    <div class="fd-content">
+                        <span class="fd-emoji">📚</span>
+                        <h3 class="fd-title">知识点总结</h3>
+                        <p class="fd-desc">按章节系统梳理知识要点，生成清晰的知识框架。重点归纳、易错点标注、考点对接，帮助学生高效复习。支持多种教材版本。</p>
+                        <ul class="fd-highlights">
+                            <li>知识框架梳理，形成系统化知识网络</li>
+                            <li>重点难点归纳标注，一目了然</li>
+                            <li>易错点整理与提醒，减少丢分</li>
+                            <li>考点对接，明确考试方向</li>
+                            <li>支持人教版、北师大版、苏教版等10+版本</li>
+                        </ul>
+                        <div class="fd-tags">
+                            <span class="fd-tag">知识梳理</span><span class="fd-tag">重点归纳</span>
+                            <span class="fd-tag">易错点</span><span class="fd-tag">考点对接</span>
+                        </div>
+                        <a href="./chat.html?service=zhishidian" class="fd-cta">去使用 →</a>
+                    </div>
+                    <div class="fd-image">
+                        <img src="./imgs/260724_00_生图/img_3.jpg" alt="知识点总结">
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </section>
 
     <!-- 效果演示 -->
     <section id="demo" class="demo">
         <div class="container">
-            <h2 class="section-title">效果演示</h2>
-            <p class="section-subtitle">以教案生成为例，看AI如何帮您快速备课</p>
+            <h2 class="section-title">🎯 效果演示</h2>
+            <p class="section-subtitle">以教案生成为例，看 AI 如何帮您快速备课</p>
             <div class="demo-content">
                 <div class="demo-text">
                     <h3>10秒生成完整教案</h3>
                     <p><strong>输入：</strong>初一数学，有理数的加法</p>
                     <p><strong>输出：</strong>包含教学目标、重难点、教学过程、板书设计的完整教案，可直接打印使用。</p>
-                    <p><strong>节省时间：</strong>从2小时备课 &rarr; 10分钟检查修改</p>
+                    <p><strong>节省时间：</strong>从2小时备课 → 10分钟检查修改</p>
                     <p><strong>质量保障：</strong>符合课程标准，知识点准确，结构完整。</p>
                     <div>
                         <span class="demo-tag">符合课标</span>
@@ -954,7 +1014,7 @@
                     </div>
                 </div>
                 <div class="demo-box">
-                    <div class="demo-label">AI 生成结果</div>
+                    <div class="demo-label">✨ AI 生成结果预览</div>
                     <pre>《有理数的加法》教学设计
 
 一、教学目标
@@ -984,16 +1044,146 @@
         </div>
     </section>
 
+    <!-- Wave divider -->
+    <div class="wave-divider">
+        <svg viewBox="0 0 1440 60" preserveAspectRatio="none">
+            <path d="M0,60 C360,0 720,0 1080,60 C1260,30 1380,30 1440,60 L1440,0 L0,0 Z" fill="#fff"/>
+        </svg>
+    </div>
+
+    <!-- 视频展示区 -->
+    <section class="video-section">
+        <div class="container">
+            <h2 class="section-title">🎬 观看老师的小能手如何工作</h2>
+            <p class="section-subtitle">1分钟了解 AI 如何帮你生成教案、试卷、教学建议</p>
+            <div class="video-player-wrapper">
+                <img src="./imgs/260724_00_生图/img_6.jpg" alt="产品界面展示">
+                <div class="video-play-btn" title="播放演示视频"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 数据统计区 -->
+    <section class="stats-section">
+        <div class="container">
+            <h2 class="section-title">📈 深受老师信赖</h2>
+            <p class="section-subtitle">用数据说话，看老师们如何使用 AI 助手</p>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <span class="stat-emoji">📖</span>
+                    <span class="stat-num">10万+</span>
+                    <span class="stat-label">教案已生成</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-emoji">📝</span>
+                    <span class="stat-num">5万+</span>
+                    <span class="stat-label">试卷已生成</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-emoji">👩‍🏫</span>
+                    <span class="stat-num">3000+</span>
+                    <span class="stat-label">老师在用</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-emoji">⭐</span>
+                    <span class="stat-num">95%</span>
+                    <span class="stat-label">满意度好评</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+    <!-- 添加到手机桌面 -->
+    <section class="pwa-install-section" id="pwaInstall">
+        <div class="container">
+            <div class="pwa-install-card">
+                <div class="pwa-install-icon">📱</div>
+                <div class="pwa-install-text">
+                    <h3>添加到手机桌面，像 APP 一样使用</h3>
+                    <p>一键安装到桌面，全屏体验、离线可用、启动更快，再也不怕找不到入口</p>
+                    <div class="pwa-install-steps" id="pwaSteps">
+                        <ol>
+                            <li>点击浏览器底部的「分享」按钮 <span style="font-size:14px">⬆</span></li>
+                            <li>选择「添加到主屏幕」</li>
+                            <li>确认即可，桌面就会出现图标</li>
+                        </ol>
+                    </div>
+                </div>
+                <button class="pwa-install-btn" id="pwaInstallBtn" onclick="handlePwaInstall()">添加到桌面</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- 用户好评区 -->
+    <section class="testimonials">
+        <div class="container">
+            <h2 class="section-title">💬 老师们怎么说</h2>
+            <p class="section-subtitle">来自一线教师的真实反馈</p>
+            <div class="testimonial-grid">
+                <div class="testimonial-card">
+                    <div class="testimonial-stars">★★★★★</div>
+                    <p class="testimonial-text">"以前写一份教案至少要2小时，现在10分钟就搞定了，而且质量很高。特别是教学过程设计，比我预想的还要详细。省下来的时间可以多关注学生了。"</p>
+                    <div class="testimonial-author">
+                        <div class="testimonial-avatar">王</div>
+                        <div class="testimonial-info">
+                            <div class="t-name">王老师</div>
+                            <div class="t-role">初中语文 · 使用1年</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="testimonial-card">
+                    <div class="testimonial-stars">★★★★★</div>
+                    <p class="testimonial-text">"出卷功能太实用了！以前找题拼题要花一整天，现在输入知识点和难度，2分钟就出一套完整的试卷，还带解析。学生做起来难度也刚好。"</p>
+                    <div class="testimonial-author">
+                        <div class="testimonial-avatar">李</div>
+                        <div class="testimonial-info">
+                            <div class="t-name">李老师</div>
+                            <div class="t-role">高中数学 · 使用8个月</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="testimonial-card">
+                    <div class="testimonial-stars">★★★★★</div>
+                    <p class="testimonial-text">"作为班主任，每学期写学生评语是最头疼的。德育助手的评语功能帮我大忙，每个学生的评语都不一样，还很有温度。家长反馈也很正面。"</p>
+                    <div class="testimonial-author">
+                        <div class="testimonial-avatar">张</div>
+                        <div class="testimonial-info">
+                            <div class="t-name">张老师</div>
+                            <div class="t-role">小学班主任 · 使用6个月</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 未来教育Banner -->
+    <section class="future-banner">
+        <div class="container">
+            <div class="future-banner-inner">
+                <div class="future-banner-text">
+                    <h2>🚀 AI 正在改变教育</h2>
+                    <p>当 AI 处理了重复性的文案工作，老师就能把更多时间留给学生，留给真正有温度的教育。这不是替代，而是赋能。每一位老师都值得拥有这样的助手。</p>
+                    <a href="./chat.html" class="hero-cta" style="display:inline-flex;">开始免费体验 ✨</a>
+                </div>
+                <div class="fd-image">
+                    <img src="./imgs/260724_00_生图/img_5.jpg" alt="AI+教育未来场景">
+                </div>
+            </div>
+        </div>
+    </section>
+
     <!-- 定价 -->
     <section id="pricing" class="pricing">
         <div class="container">
-            <h2 class="section-title">服务定价</h2>
+            <h2 class="section-title">💎 服务定价</h2>
             <p class="section-subtitle">本校教师免费使用，外部教师灵活选择</p>
 
             <div class="pricing-free">
-                <div class="pricing-free-icon">&#10003;</div>
+                <div class="pricing-free-icon">✓</div>
                 <div class="pricing-free-text">
-                    <h4>本校教师：免费使用</h4>
+                    <h4>🎉 本校教师：免费使用</h4>
                     <p>所在学校已开通服务的教师，全部功能不限次数免费使用</p>
                 </div>
             </div>
@@ -1001,10 +1191,10 @@
             <div class="pricing-grid">
                 <div class="pricing-card">
                     <h3>单次体验</h3>
-                    <div class="pricing-price">&yen;9.9<span>/次</span></div>
+                    <div class="pricing-price">¥9.9<span>/次</span></div>
                     <p class="pricing-desc">适合偶尔使用，按需付费</p>
                     <ul class="pricing-features">
-                        <li>1次AI生成服务</li>
+                        <li>1次 AI 生成服务</li>
                         <li>任选功能模块</li>
                         <li>含详细解析</li>
                         <li>结果永久保存</li>
@@ -1012,26 +1202,26 @@
                     <a href="./chat.html" class="pricing-cta default">立即使用</a>
                 </div>
                 <div class="pricing-card featured">
-                    <div class="pricing-badge">推荐</div>
+                    <div class="pricing-badge">🔥 推荐</div>
                     <h3>月卡</h3>
-                    <div class="pricing-price">&yen;99<span>/12次</span></div>
+                    <div class="pricing-price">¥99<span>/12次</span></div>
                     <p class="pricing-desc">月度高频使用，性价比之选</p>
                     <ul class="pricing-features">
-                        <li>12次AI生成服务</li>
+                        <li>12次 AI 生成服务</li>
                         <li>全部功能开放</li>
-                        <li>单次低至8.25元</li>
+                        <li>单次低至 ¥8.25</li>
                         <li>专属客服支持</li>
                     </ul>
                     <a href="./chat.html" class="pricing-cta primary">立即开通</a>
                 </div>
                 <div class="pricing-card">
                     <h3>年卡</h3>
-                    <div class="pricing-price">&yen;699<span>/99次</span></div>
+                    <div class="pricing-price">¥699<span>/99次</span></div>
                     <p class="pricing-desc">全年无忧，重度使用首选</p>
                     <ul class="pricing-features">
-                        <li>99次AI生成服务</li>
+                        <li>99次 AI 生成服务</li>
                         <li>全部功能开放</li>
-                        <li>单次低至7.06元</li>
+                        <li>单次低至 ¥7.06</li>
                         <li>专属客服支持</li>
                     </ul>
                     <a href="./chat.html" class="pricing-cta default">立即开通</a>
@@ -1045,13 +1235,34 @@
         <div class="container">
             <div class="footer-content">
                 <div class="footer-left">
-                    <div class="footer-brand">老师的小能手</div>
-                    <p>AI驱动的教学助手，让每一位老师轻松备课、高效教学</p>
+                    <div class="footer-brand">🎓 老师的小能手</div>
+                    <p>AI 驱动的教学助手，让每一位老师轻松备课、高效教学。覆盖教案生成、智能出卷、教学建议、德育助手等七大核心功能。</p>
                 </div>
-                <div class="footer-right">
-                    <p>联系我们：laoshizhushou@coze.email</p>
-                    <a href="./chat.html">开始使用 &rarr;</a>
+                <div class="footer-links">
+                    <div class="footer-col">
+                        <h4>功能</h4>
+                        <a href="./chat.html?service=jiaoan">生成教案</a>
+                        <a href="./chat.html?service=chujuan">智能出卷</a>
+                        <a href="./chat.html?service=jianyi">教学建议</a>
+                        <a href="./chat.html?service=deyu">德育助手</a>
+                    </div>
+                    <div class="footer-col">
+                        <h4>更多</h4>
+                        <a href="./chat.html?service=jiaowu">教务助手</a>
+                        <a href="./chat.html?service=xiaozhang">校长小助手</a>
+                        <a href="./chat.html?service=zhishidian">知识点总结</a>
+                        <a href="./chat.html">登录 / 注册</a>
+                    </div>
+                    <div class="footer-col">
+                        <h4>联系</h4>
+                        <a href="mailto:laoshizhushou@coze.email">📧 邮箱联系</a>
+                        <a href="./chat.html">💬 在线客服</a>
+                    </div>
                 </div>
+            </div>
+            <div class="footer-bottom">
+                <p>© 2025 老师的小能手 · AI教育助手</p>
+                <a href="mailto:laoshizhushou@coze.email">laoshizhushou@coze.email</a>
             </div>
         </div>
     </footer>
@@ -1060,21 +1271,17 @@
         // 汉堡菜单
         const hamburger = document.getElementById('hamburger');
         const mobileNav = document.getElementById('mobileNav');
-
         hamburger.addEventListener('click', function() {
             this.classList.toggle('active');
             mobileNav.classList.toggle('open');
         });
-
-        // 点击手机端导航链接后关闭菜单
         mobileNav.querySelectorAll('a').forEach(function(link) {
             link.addEventListener('click', function() {
                 hamburger.classList.remove('active');
                 mobileNav.classList.remove('open');
             });
         });
-
-        // 平滑滚动（锚点链接）
+        // 平滑滚动
         document.querySelectorAll('a[href^="#"]').forEach(function(anchor) {
             anchor.addEventListener('click', function(e) {
                 var targetId = this.getAttribute('href');
@@ -1082,14 +1289,10 @@
                 var target = document.querySelector(targetId);
                 if (target) {
                     e.preventDefault();
-                    target.scrollIntoView({
-                        behavior: 'smooth',
-                        block: 'start'
-                    });
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 }
             });
         });
-
         // 滚动进入动画
         var observer = new IntersectionObserver(function(entries) {
             entries.forEach(function(entry) {
@@ -1099,22 +1302,83 @@
                 }
             });
         }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
-
-        document.querySelectorAll('.feature-card, .pricing-card, .demo-content, .pricing-free').forEach(function(el) {
+        document.querySelectorAll('.feature-card, .pricing-card, .demo-content, .pricing-free, .stat-card, .testimonial-card, .fd-inner').forEach(function(el) {
             observer.observe(el);
         });
     </script>
 
+    <script>
+    // Register Service Worker for PWA
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('./sw.js').then(function(reg) {
+        console.log('[PWA] SW registered, scope:', reg.scope);
+      }).catch(function(err) {
+        console.warn('[PWA] SW registration failed:', err);
+      });
+    }
+    </script>
 
-<script>
-// Register Service Worker for PWA
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('./sw.js').then(function(reg) {
-    console.log('[PWA] SW registered, scope:', reg.scope);
-  }).catch(function(err) {
-    console.warn('[PWA] SW registration failed:', err);
-  });
-}
-</script>
+    <script>
+    // PWA Install logic for index.html
+    var deferredPrompt = null;
+    var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    var isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+
+    window.addEventListener('beforeinstallprompt', function(e) {
+        e.preventDefault();
+        deferredPrompt = e;
+        var btn = document.getElementById('pwaInstallBtn');
+        if (btn && !isStandalone) {
+            btn.textContent = '添加到桌面';
+            btn.style.display = '';
+        }
+    });
+
+    function handlePwaInstall() {
+        var btn = document.getElementById('pwaInstallBtn');
+        // If already standalone, hide
+        if (isStandalone) {
+            btn.textContent = '已安装 ✓';
+            btn.classList.add('installed');
+            return;
+        }
+        // Android / Chrome: use beforeinstallprompt
+        if (deferredPrompt) {
+            deferredPrompt.prompt();
+            deferredPrompt.userChoice.then(function(result) {
+                if (result.outcome === 'accepted') {
+                    btn.textContent = '已安装 ✓';
+                    btn.classList.add('installed');
+                }
+                deferredPrompt = null;
+            });
+            return;
+        }
+        // iOS Safari: show manual steps
+        if (isIOS) {
+            var steps = document.getElementById('pwaSteps');
+            steps.classList.toggle('show');
+            btn.textContent = '按上方步骤操作';
+            btn.style.fontSize = '12px';
+            btn.style.padding = '10px 20px';
+            return;
+        }
+        // Fallback: already installed or not supported
+        btn.textContent = '已安装 ✓';
+        btn.classList.add('installed');
+    }
+
+    // Check if already installed
+    if (isStandalone) {
+        document.addEventListener('DOMContentLoaded', function() {
+            var btn = document.getElementById('pwaInstallBtn');
+            if (btn) {
+                btn.textContent = '已安装 ✓';
+                btn.classList.add('installed');
+            }
+        });
+    }
+    </script>
+
 </body>
 </html>
