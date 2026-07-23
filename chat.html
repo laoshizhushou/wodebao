@@ -271,6 +271,59 @@
   }
   .generated-card .gen-actions { display: flex; gap: 6px; }
 
+  /* ========== File Message Card ========== */
+  .file-msg {
+    display: flex; align-items: center; gap: 12px;
+    padding: 14px 16px; background: #fff; border: 1px solid #e5e7eb;
+    border-radius: 10px; cursor: pointer; transition: all 0.2s;
+    margin-top: 6px; position: relative; min-width: 240px;
+  }
+  .file-msg:active { background: #f9fafb; border-color: #1a56db; }
+  .file-msg .file-icon {
+    width: 42px; height: 42px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; flex-shrink: 0; color: #fff; font-weight: 700;
+  }
+  .file-msg .file-icon.doc { background: #2563eb; }
+  .file-msg .file-icon.exam { background: #059669; }
+  .file-msg .file-icon.tip { background: #d97706; }
+  .file-msg .file-icon.deyu { background: #7c3aed; }
+  .file-msg .file-icon.jw { background: #0891b2; }
+  .file-msg .file-icon.xz { background: #4f46e5; }
+  .file-msg .file-icon.zs { background: #be185d; }
+  .file-msg .file-info { flex: 1; min-width: 0; }
+  .file-msg .file-name {
+    font-size: 14px; font-weight: 600; color: #1f2937;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .file-msg .file-meta {
+    font-size: 12px; color: #9ca3af; margin-top: 3px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .file-msg .file-dl {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: #f0f4ff; border: none; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    color: #1a56db; font-size: 16px; flex-shrink: 0;
+    transition: all 0.15s;
+  }
+  .file-msg .file-dl:active { background: #dbeafe; }
+
+  /* File expanded view */
+  .file-expanded {
+    display: none; margin-top: 8px;
+    animation: msgIn 0.25s ease;
+  }
+  .file-expanded.show { display: block; }
+  .file-expanded .fe-content {
+    background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px;
+    padding: 14px; font-size: 13px; line-height: 1.7; color: #374151;
+    white-space: pre-wrap; max-height: 400px; overflow-y: auto; margin-bottom: 10px;
+  }
+  .file-expanded .fe-actions {
+    display: flex; gap: 6px; flex-wrap: wrap;
+  }
+
   /* ========== Typing ========== */
   .typing-indicator { display:flex; align-items:center; gap:4px; padding:4px 0; }
   .typing-dot {
@@ -1726,24 +1779,57 @@ async function submitForm() {
   function showResult(generatedContent) {
     genDiv.remove();
     const escapedContent = escapeHtml(generatedContent);
+
+    // File card config per service type
+    const FILE_CONFIG = {
+      jiaoan:    { icon:'文', cls:'doc',  label:'Word文档' },
+      chujuan:   { icon:'卷', cls:'exam', label:'Word文档' },
+      jianyi:    { icon:'策', cls:'tip',  label:'建议文档' },
+      deyu:      { icon:'德', cls:'deyu', label:'Word文档' },
+      jiaowu:    { icon:'务', cls:'jw',   label:'Word文档' },
+      xiaozhang: { icon:'校', cls:'xz',   label:'Word文档' },
+      zhishidian:{ icon:'知', cls:'zs',   label:'总结文档' }
+    };
+    const fc = FILE_CONFIG[data.service] || { icon:'文', cls:'doc', label:'文档' };
+
+    // Estimate file size from content
+    const byteLen = new Blob([generatedContent]).size;
+    const sizeStr = byteLen < 1024 ? byteLen + ' B' : (byteLen / 1024).toFixed(1) + ' KB';
+
+    // Build file display title
+    const topicKey = data.topic || data.knowledge || data.desc || data.dtype || data.jwtype || data.xztype || '';
+    const fileTitle = SERVICE_LABELS[data.service] + (topicKey ? '：' + topicKey : '');
+
+    const safeFilename = dlFilename.replace(/'/g,"\\'");
+
     const resultDiv = document.createElement('div');
     resultDiv.className = 'message bot';
     resultDiv.innerHTML =
       '<div class="bot-avatar">AI</div>' +
-      '<div class="bubble" style="max-width:92%">' +
-        '<div style="font-weight:600;font-size:13px;color:#059669;margin-bottom:6px;">AI 生成完成</div>' +
-        '<div class="generated-card">' +
-          '<div class="gen-title">' + SERVICE_LABELS[data.service] + '</div>' +
-          '<div class="gen-content">' + escapedContent + '</div>' +
-          '<div class="gen-actions" style="flex-wrap:wrap;">' +
-            '<button class="btn-action" onclick="openModifyInChat(this)">修改</button>' +
-            '<button class="btn-action" onclick="copyGenerated(this)">复制内容</button>' +
-            '<button class="btn-action" onclick="downloadGeneratedContent(\'' + dlFilename.replace(/'/g,"\\'") + '\')">下载文档</button>' +
-            '<button class="btn-action confirm" onclick="confirmGenerated(this)">确认</button>' +
-            '<button class="btn-action" style="background:#1a56db;color:#fff;border-color:#1a56db;" onclick="backToHome()">返回首页</button>' +
+      '<div class="bubble" style="max-width:92%;background:transparent;border:none;padding:0;">' +
+        '<div style="font-weight:600;font-size:13px;color:#059669;margin-bottom:8px;">✅ AI 生成完成</div>' +
+        '<div class="file-msg" onclick="toggleFileExpand(this)">' +
+          '<div class="file-icon ' + fc.cls + '">' + fc.icon + '</div>' +
+          '<div class="file-info">' +
+            '<div class="file-name">' + escapeHtml(fileTitle) + '</div>' +
+            '<div class="file-meta"><span>' + fc.label + '</span><span>·</span><span>' + sizeStr + '</span></div>' +
+          '</div>' +
+          '<button class="file-dl" onclick="event.stopPropagation();downloadGeneratedContent(\'' + safeFilename + '\')" title="下载">↓</button>' +
+        '</div>' +
+        '<div class="file-expanded">' +
+          '<div class="generated-card">' +
+            '<div class="gen-content" style="margin-bottom:10px;">' + escapedContent + '</div>' +
+            '<div class="gen-actions fe-actions" style="flex-wrap:wrap;">' +
+              '<button class="btn-action" onclick="openModifyInChat(this)">修改</button>' +
+              '<button class="btn-action" onclick="copyGenerated(this)">复制内容</button>' +
+              '<button class="btn-action" onclick="downloadGeneratedContent(\'' + safeFilename + '\')">下载文档</button>' +
+              '<button class="btn-action confirm" onclick="confirmGenerated(this)">确认</button>' +
+              '<button class="btn-action" style="background:#1a56db;color:#fff;border-color:#1a56db;" onclick="backToHome()">返回首页</button>' +
+            '</div>' +
           '</div>' +
         '</div>' +
       '</div>';
+
     resultDiv._generatedContent = generatedContent;
     resultDiv._dlFilename = dlFilename;
     resultDiv.dataset.filename = dlFilename;
@@ -1760,6 +1846,14 @@ async function submitForm() {
     scrollToBottom();
   }
 
+  // Toggle file card expand/collapse
+  window.toggleFileExpand = function(fileMsg) {
+    const expanded = fileMsg.nextElementSibling;
+    if (expanded && expanded.classList.contains('file-expanded')) {
+      expanded.classList.toggle('show');
+    }
+  };
+
   function pollForResult() {
     if (!_resultId || !window._sb) {
       // No DB, fallback to template
@@ -1769,12 +1863,16 @@ async function submitForm() {
     }
     if (Date.now() - startTime > maxWait) {
       genDiv.remove();
-      addBotMessageWithButton('生成时间较长，已为您保存需求。您可以稍后在"我的订单"中查看结果，或重新提交。');
+      addBotMessageWithButton('生成时间较长，需求已保存。请稍后重新提交，或返回首页稍后再试。');
       return;
     }
     window._sb.from('generated_results').select('status,result_content').eq('id', _resultId).single().then(({ data: row, error }) => {
       if (error || !row) { setTimeout(pollForResult, pollInterval); return; }
       if (row.status === 'completed' && row.result_content) {
+        // Delete from DB so it doesn't appear in "我的" history
+        if (_resultId && window._sb) {
+          window._sb.from('generated_results').delete().eq('id', _resultId).then().catch(function(){});
+        }
         showResult(row.result_content);
       } else {
         setTimeout(pollForResult, pollInterval);
@@ -1939,7 +2037,7 @@ function confirmGenerated(btn) {
     }).eq('id', resultId).then(() => {}).catch(e => console.warn('Confirm update failed:', e));
   }
   
-  addBotMessage('内容已确认，您可以在个人中心的"生成结果"中查看历史记录。');
+  addBotMessage('内容已确认保存！如需再次使用，可以选择其他服务继续。');
 }
 window.confirmGenerated = confirmGenerated;
 
