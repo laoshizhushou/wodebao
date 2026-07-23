@@ -772,6 +772,21 @@ function addBotMessage(text) {
   scrollToBottom();
 }
 
+// Add bot message with a "back to home" button
+function addBotMessageWithButton(text) {
+  const div = document.createElement('div');
+  div.className = 'message bot';
+  div.innerHTML = '<div class="bot-avatar">AI</div><div class="bubble">' + text + '<br><button class="btn-action" style="background:#1a56db;color:#fff;border-color:#1a56db;margin-top:8px;" onclick="backToHome()">返回首页</button></div>';
+  chatMessages.appendChild(div);
+  scrollToBottom();
+}
+window.backToHome = function() {
+  chatMessages.innerHTML = '';
+  currentService = null;
+  addBotMessage('您好，请选择您需要的服务：');
+  setTimeout(function() { addServiceCards(); }, 300);
+};
+
 function addUserMessage(text) {
   const div = document.createElement('div');
   div.className = 'message user';
@@ -1720,11 +1735,12 @@ async function submitForm() {
         '<div class="generated-card">' +
           '<div class="gen-title">' + SERVICE_LABELS[data.service] + '</div>' +
           '<div class="gen-content">' + escapedContent + '</div>' +
-          '<div class="gen-actions">' +
+          '<div class="gen-actions" style="flex-wrap:wrap;">' +
             '<button class="btn-action" onclick="openModifyInChat(this)">修改</button>' +
             '<button class="btn-action" onclick="copyGenerated(this)">复制内容</button>' +
             '<button class="btn-action" onclick="downloadGeneratedContent(\'' + dlFilename.replace(/'/g,"\\'") + '\')">下载文档</button>' +
             '<button class="btn-action confirm" onclick="confirmGenerated(this)">确认</button>' +
+            '<button class="btn-action" style="background:#1a56db;color:#fff;border-color:#1a56db;" onclick="backToHome()">返回首页</button>' +
           '</div>' +
         '</div>' +
       '</div>';
@@ -1748,12 +1764,12 @@ async function submitForm() {
     if (!_resultId || !window._sb) {
       // No DB, fallback to template
       genDiv.remove();
-      addBotMessage('内容生成失败，请刷新后重试。');
+      addBotMessageWithButton('内容生成失败，请刷新后重试。');
       return;
     }
     if (Date.now() - startTime > maxWait) {
       genDiv.remove();
-      addBotMessage('生成时间较长，已为您保存需求。您可以稍后在"我的订单"中查看结果，或重新提交。');
+      addBotMessageWithButton('生成时间较长，已为您保存需求。您可以稍后在"我的订单"中查看结果，或重新提交。');
       return;
     }
     window._sb.from('generated_results').select('status,result_content').eq('id', _resultId).single().then(({ data: row, error }) => {
