@@ -397,7 +397,15 @@
   .profile-header {
     text-align:center; padding-bottom:16px;
     border-bottom:1px solid #e5e7eb; margin-bottom:16px;
+    position: relative;
   }
+  .profile-close-btn {
+    position: absolute; top: 0; left: 0;
+    background: none; border: none;
+    font-size: 20px; color: #6b7280; cursor: pointer;
+    padding: 4px 8px; line-height: 1;
+  }
+  .profile-close-btn:active { color: #1a56db; }
   .profile-avatar {
     width:48px; height:48px; border-radius:8px;
     background:#1a56db; display:flex; align-items:center; justify-content:center;
@@ -677,6 +685,7 @@
 <div class="profile-backdrop" id="profileBackdrop" onclick="closeProfile()"></div>
 <div class="profile-panel" id="profilePanel">
   <div class="profile-header">
+    <button class="profile-close-btn" onclick="closeProfile()" title="关闭">&larr;</button>
     <div class="profile-avatar" id="profileAvatar">师</div>
     <div class="profile-name" id="profileName">老师</div>
     <div class="profile-phone" id="profilePhone"></div>
@@ -834,10 +843,25 @@ function addBotMessageWithButton(text) {
   scrollToBottom();
 }
 window.backToHome = function() {
+  // Stop any active polling and timer
+  if (window._cancelCurrentPoll) window._cancelCurrentPoll();
+  var genDiv = document.getElementById('aiGenerating');
+  if (genDiv && genDiv._timerInterval) clearInterval(genDiv._timerInterval);
   chatMessages.innerHTML = '';
   currentService = null;
   addBotMessage('您好，请选择您需要的服务：');
   setTimeout(function() { addServiceCards(); }, 300);
+};
+
+// Cancel generation while waiting
+window.cancelGeneration = function() {
+  if (window._cancelCurrentPoll) window._cancelCurrentPoll();
+  var genDiv = document.getElementById('aiGenerating');
+  if (genDiv) {
+    if (genDiv._timerInterval) clearInterval(genDiv._timerInterval);
+    genDiv.remove();
+  }
+  backToHome();
 };
 
 function addUserMessage(text) {
@@ -1762,21 +1786,50 @@ async function submitForm() {
     }
   }
 
-  // Show AI generating animation
+  // Show AI generating animation with timer and back button
   const genDiv = document.createElement('div');
   genDiv.className = 'message bot';
   genDiv.id = 'aiGenerating';
-  genDiv.innerHTML = '<div class="bot-avatar">AI</div><div class="bubble"><div class="ai-generating"><div class="ai-spinner"></div><span>AI 正在生成内容，请稍候...</span></div></div>';
+  genDiv.innerHTML = '<div class="bot-avatar">AI</div><div class="bubble" style="max-width:92%">' +
+    '<div class="ai-generating" style="margin-bottom:10px;"><div class="ai-spinner"></div><span id="aiGenText">AI 正在生成内容，请稍候...</span></div>' +
+    '<div style="display:flex;align-items:center;justify-content:space-between;">' +
+      '<span id="aiGenTimer" style="font-size:12px;color:#9ca3af;">已等待 0 秒</span>' +
+      '<button class="btn-action" style="font-size:12px;padding:6px 14px;" onclick="cancelGeneration()">返回首页</button>' +
+    '</div>' +
+  '</div>';
   chatMessages.appendChild(genDiv);
   scrollToBottom();
+
+  // Timer update
+  const _genStartTime = Date.now();
+  const _genTimerInterval = setInterval(function() {
+    const el = document.getElementById('aiGenTimer');
+    if (!el) { clearInterval(_genTimerInterval); return; }
+    const sec = Math.floor((Date.now() - _genStartTime) / 1000);
+    el.textContent = '已等待 ' + sec + ' 秒';
+    // Change hint text after 30s
+    if (sec >= 30 && sec < 60) {
+      const txtEl = document.getElementById('aiGenText');
+      if (txtEl && txtEl.textContent.indexOf('请稍候') > -1) txtEl.textContent = '内容较复杂，AI 仍在努力生成中...';
+    } else if (sec >= 60) {
+      const txtEl = document.getElementById('aiGenText');
+      if (txtEl) txtEl.textContent = '生成时间较长，请耐心等待...';
+    }
+  }, 1000);
+  // Store interval ID for cleanup
+  genDiv._timerInterval = _genTimerInterval;
 
   // Poll database for AI-generated content
   const maxWait = 120000; // 2 minutes max
   const pollInterval = 3000; // check every 3 seconds
   const startTime = Date.now();
   const dlFilename = getDownloadFilename(data.service, data);
+  let _cancelled = false; // Flag to stop polling when user cancels
+  window._cancelCurrentPoll = function() { _cancelled = true; };
 
   function showResult(generatedContent) {
+    // Clear timer
+    if (genDiv._timerInterval) clearInterval(genDiv._timerInterval);
     genDiv.remove();
     const escapedContent = escapeHtml(generatedContent);
 
@@ -1855,6 +1908,7 @@ async function submitForm() {
   };
 
   function pollForResult() {
+    if (_cancelled) return; // User cancelled, stop polling
     if (!_resultId || !window._sb) {
       // No DB, fallback to template
       genDiv.remove();
@@ -1862,6 +1916,7 @@ async function submitForm() {
       return;
     }
     if (Date.now() - startTime > maxWait) {
+      if (genDiv._timerInterval) clearInterval(genDiv._timerInterval);
       genDiv.remove();
       addBotMessageWithButton('生成时间较长，需求已保存。请稍后重新提交，或返回首页稍后再试。');
       return;
