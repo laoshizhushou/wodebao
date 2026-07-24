@@ -917,7 +917,9 @@ window.addEventListener('DOMContentLoaded', () => {
 });
 
 // ========== Helpers ==========
-function scrollToBottom() {
+function scrollToBottom(force) {
+  // Don't auto-scroll when form-area is visible (user is filling a form)
+  if (!force && formArea && !formArea.classList.contains('hidden')) return;
   setTimeout(() => { chatMessages.scrollTop = chatMessages.scrollHeight; }, 50);
 }
 
