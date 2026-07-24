@@ -1829,32 +1829,42 @@ async function _instantGenerate(recordId, data, onComplete) {
     '4. \u5982\u6709\u5177\u4f53\u4e3b\u9898\u6216\u95ee\u9898\u63cf\u8ff0\uff0c\u56f4\u7ed5\u5176\u5c55\u5f00\uff1b\u5982\u65e0\uff0c\u5219\u6309\u8be5\u7c7b\u578b\u901a\u7528\u6700\u4f73\u5b9e\u8df5\u751f\u6210\n' +
     '5. \u5185\u5bb9\u957f\u5ea6800-2000\u5b57\uff0c\u786e\u4fdd\u4fe1\u606f\u5bc6\u5ea6\u548c\u5b9e\u7528\u6027\n' +
     '6. \u76f4\u63a5\u8f93\u51fa\u5185\u5bb9\uff0c\u4e0d\u8981\u6709\u4efb\u4f55\u89e3\u91ca\u6027\u6587\u5b57\u6216\u524d\u8a00';
-  try {
-    // 使用XMLHttpRequest代替fetch，兼容微信浏览器
-    var _result = await new Promise(function(resolve, reject) {
+  var _body = JSON.stringify({
+    model: 'Qwen/Qwen2.5-72B-Instruct',
+    messages: [{ role: 'user', content: _prompt }],
+    max_tokens: 4096,
+    temperature: 0.7
+  });
+  // 尝试调用API，失败则自动走代理（兼容微信浏览器）
+  async function _tryApi(targetUrl) {
+    return new Promise(function(resolve, reject) {
       var xhr = new XMLHttpRequest();
-      xhr.open('POST', _url, true);
+      xhr.open('POST', targetUrl, true);
       xhr.setRequestHeader('Content-Type', 'application/json');
       xhr.setRequestHeader('Authorization', 'Bearer ' + _k);
-      xhr.timeout = 60000; // 60秒超时
+      xhr.timeout = 60000;
       xhr.onload = function() {
         if (xhr.status >= 200 && xhr.status < 300) {
           try { resolve(JSON.parse(xhr.responseText)); }
           catch(e) { reject(new Error('JSON解析失败')); }
         } else {
-          console.warn('[即时生成] API状态:', xhr.status, xhr.responseText.substring(0, 100));
-          reject(new Error('API响应异常:' + xhr.status));
+          reject(new Error('API状态:' + xhr.status));
         }
       };
-      xhr.onerror = function() { reject(new Error('网络请求失败(可能被微信拦截)')); };
-      xhr.ontimeout = function() { reject(new Error('请求超时')); };
-      xhr.send(JSON.stringify({
-        model: 'Qwen/Qwen2.5-72B-Instruct',
-        messages: [{ role: 'user', content: _prompt }],
-        max_tokens: 4096,
-        temperature: 0.7
-      }));
+      xhr.onerror = function() { reject(new Error('网络失败')); };
+      xhr.ontimeout = function() { reject(new Error('超时')); };
+      xhr.send(_body);
     });
+  }
+  var _proxyUrl = 'https://cors-proxy-kokodev.netlify.app/?url=https%3A%2F%2Fapi.siliconflow.cn%2Fv1%2Fchat%2Fcompletions';
+  try {
+    var _result;
+    try {
+      _result = await _tryApi(_url); // 先直连
+    } catch(e1) {
+      console.warn('[即时生成] 直连失败，尝试代理:', e1.message);
+      _result = await _tryApi(_proxyUrl); // 走代理
+    }
     var _content = _result.choices && _result.choices[0] && _result.choices[0].message ? _result.choices[0].message.content : null;
     if (_content) {
       // 更新数据库记录
