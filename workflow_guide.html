@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>添加Workflow文件指引</title>
+<style>
+body { font-family: -apple-system, sans-serif; max-width: 800px; margin: 20px auto; padding: 0 15px; background: #f5f5f5; }
+.step { background: white; border-radius: 12px; padding: 20px; margin: 15px 0; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+.step h3 { margin: 0 0 10px; color: #1a73e8; }
+.step p { margin: 5px 0; line-height: 1.6; }
+.code-block { background: #1e1e1e; color: #d4d4d4; padding: 15px; border-radius: 8px; overflow-x: auto; font-size: 13px; line-height: 1.5; white-space: pre; position: relative; }
+.copy-btn { position: absolute; top: 8px; right: 8px; background: #1a73e8; color: white; border: none; padding: 6px 14px; border-radius: 6px; font-size: 13px; cursor: pointer; }
+.copy-btn:active { background: #1557b0; }
+.filename { background: #fff3cd; padding: 8px 12px; border-radius: 6px; font-family: monospace; font-size: 14px; border: 1px solid #ffc107; }
+.link-btn { display: inline-block; background: #28a745; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-size: 16px; font-weight: bold; margin: 10px 0; }
+.note { background: #e8f5e9; padding: 12px; border-radius: 8px; border-left: 4px solid #4caf50; margin: 10px 0; }
+</style>
+</head>
+<body>
+<h2 style="text-align:center; color:#333;">🚀 添加即时生成功能</h2>
+<p style="text-align:center; color:#666;">只需3步，完成后网站就能秒生成AI内容</p>
+
+<div class="step">
+<h3>第1步：打开GitHub新建文件页面</h3>
+<p>点击下方按钮直接跳转 👇</p>
+<a href="https://github.com/laoshizhushou/wodebao/new/main" target="_blank" class="link-btn">📝 去GitHub创建文件</a>
+</div>
+
+<div class="step">
+<h3>第2步：输入文件名</h3>
+<p>在 "Name your file..." 输入框中粘贴：</p>
+<div class="filename" id="filename">.github/workflows/instant-generate.yml</div>
+<p style="margin-top:8px;"><small>💡 输入后会自动创建文件夹</small></p>
+</div>
+
+<div class="step">
+<h3>第3步：粘贴代码内容</h3>
+<p>点击下方「复制」按钮，然后回到GitHub页面粘贴到代码框中：</p>
+<div class="code-block" id="codeBlock"><button class="copy-btn" onclick="copyCode()">📋 复制</button>name: 即时生成AI内容
+
+on:
+  repository_dispatch:
+    types: [generate-content]
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 获取待处理请求
+        id: fetch
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const recordId = context.payload.client_payload.record_id;
+            const serviceType = context.payload.client_payload.service_type;
+            const content = context.payload.client_payload.content;
+            core.setOutput('record_id', recordId);
+            core.setOutput('service_type', serviceType);
+            core.setOutput('content', content);
+            console.log(`Processing: ${recordId}, type: ${serviceType}`);
+
+      - name: 调用硅基流动API生成内容
+        id: generate
+        uses: actions/github-script@v7
+        env:
+          SILICONFLOW_API_KEY: ${{ secrets.SILICONFLOW_API_KEY }}
+        with:
+          script: |
+            const recordId = '${{ steps.fetch.outputs.record_id }}';
+            const serviceType = '${{ steps.fetch.outputs.service_type }}';
+            const content = '${{ steps.fetch.outputs.content }}';
+            const apiKey = process.env.SILICONFLOW_API_KEY;
+
+            const prompts = {
+              jiaoan: `你是一位经验丰富的教师。请根据以下内容撰写一份完整的教案：\n\n${content}\n\n要求：\n1. 包含教学目标、重难点、教学过程、板书设计\n2. 教学过程要有导入、新授、练习、小结\n3. 内容详实，可直接用于教学`,
+              shiti: `你是一位命题专家。请根据以下内容出题：\n\n${content}\n\n要求：\n1. 包含选择题、填空题、简答题各3-5道\n2. 题目难度适中，覆盖关键知识点\n3. 每道题都要有标准答案和解析`,
+              zhishidian: `你是一位资深教师。请对以下知识点进行系统总结：\n\n${content}\n\n要求：\n1. 梳理核心概念和定义\n2. 列出重要公式、定理\n3. 分析典型例题和解题思路\n4. 总结易错点和注意事项`,
+              ketang: `你是一位课堂管理专家。请根据以下情况设计课堂管理方案：\n\n${content}\n\n要求：\n1. 分析学生特点和课堂情况\n2. 设计课堂规则和奖惩机制\n3. 提供具体的管理策略和话术`,
+              zhuti_banhui: `你是一位班主任。请设计一个主题班会：\n\n${content}\n\n要求：\n1. 明确班会目标和主题\n2. 设计完整的班会流程\n3. 包含互动环节和学生活动\n4. 体现教育意义`,
+              xuexiao_guanli: `你是一位学校管理专家。请根据以下内容提供管理建议：\n\n${content}\n\n要求：\n1. 分析问题现状\n2. 提出改进方案和实施步骤\n3. 预期效果和评估指标`,
+              xuexiao_zhidu: `你是一位教育政策专家。请根据以下内容起草学校制度：\n\n${content}\n\n要求：\n1. 制度目的和适用范围\n2. 具体条款和规定\n3. 执行标准和流程`,
+              zongjie_bangao: `你是一位写作专家。请根据以下内容撰写总结或报告：\n\n${content}\n\n要求：\n1. 结构完整（引言-主体-结论）\n2. 内容详实，数据准确\n3. 语言正式，逻辑清晰`,
+              tongzhi_gongwen: `你是一位公文写作专家。请根据以下内容撰写通知或公文：\n\n${content}\n\n要求：\n1. 格式规范（标题、主送、正文、落款）\n2. 语言正式、准确\n3. 符合公文写作规范`,
+              gongkaike: `你是一位教学设计专家。请根据以下内容设计公开课：\n\n${content}\n\n要求：\n1. 教学目标明确\n2. 教学过程完整\n3. 体现新课程理念\n4. 有创新点和亮点`
+            };
+
+            const prompt = prompts[serviceType] || `你是一位专业助手。请根据以下内容生成专业文档：\n\n${content}\n\n要求：内容详实、结构清晰、语言专业、实用性强`;
+
+            const response = await fetch('https://api.siliconflow.cn/v1/chat/completions', {
+              method: 'POST',
+              headers: {
+                'Authorization': 'Bearer ' + apiKey,
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({
+                model: 'Qwen/Qwen2.5-72B-Instruct',
+                messages: [{role: 'user', content: prompt}],
+                max_tokens: 4000,
+                temperature: 0.7
+              })
+            });
+
+            const data = await response.json();
+            const generatedContent = data.choices[0].message.content;
+            core.setOutput('generated_content', generatedContent);
+            console.log('Generated ' + generatedContent.length + ' chars');
+
+      - name: 更新数据库
+        uses: actions/github-script@v7
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+        with:
+          script: |
+            const recordId = '${{ steps.fetch.outputs.record_id }}';
+            const generatedContent = '${{ steps.generate.outputs.generated_content }}';
+            const supabaseUrl = process.env.SUPABASE_URL;
+            const supabaseKey = process.env.SUPABASE_KEY;
+
+            const response = await fetch(supabaseUrl + '/rest/v1/generated_results?id=eq.' + recordId, {
+              method: 'PATCH',
+              headers: {
+                'apikey': supabaseKey,
+                'Authorization': 'Bearer ' + supabaseKey,
+                'Content-Type': 'application/json',
+                'Prefer': 'return=minimal'
+              },
+              body: JSON.stringify({
+                status: 'completed',
+                content: generatedContent,
+                completed_at: new Date().toISOString()
+              })
+            });
+
+            if (response.ok) {
+              console.log('Record ' + recordId + ' updated!');
+            } else {
+              const error = await response.text();
+              throw new Error('Failed: ' + error);
+            }</div>
+</div>
+
+<div class="step">
+<h3>第4步：提交</h3>
+<p>点击页面底部的 <strong>「Commit new file」</strong> 绿色按钮</p>
+<div class="note">
+✅ 完成后告诉我，我帮你验证是否生效！<br>
+整个过程大约1分钟。
+</div>
+</div>
+
+<script>
+function copyCode() {
+  const codeBlock = document.getElementById('codeBlock');
+  const code = codeBlock.innerText.replace('📋 复制', '').trim();
+  
+  // 创建临时textarea
+  const textarea = document.createElement('textarea');
+  textarea.value = code;
+  textarea.style.position = 'fixed';
+  textarea.style.opacity = '0';
+  document.body.appendChild(textarea);
+  textarea.select();
+  
+  try {
+    document.execCommand('copy');
+    const btn = codeBlock.querySelector('.copy-btn');
+    btn.textContent = '✅ 已复制！';
+    btn.style.background = '#28a745';
+    setTimeout(() => {
+      btn.textContent = '📋 复制';
+      btn.style.background = '#1a73e8';
+    }, 2000);
+  } catch(e) {
+    alert('复制失败，请手动选择代码复制');
+  }
+  
+  document.body.removeChild(textarea);
+}
+</script>
+</body>
+</html>
