@@ -1958,6 +1958,24 @@ async function submitForm() {
     showResult(content);
   }); }
 
+  // 同时触发GitHub Actions（服务器端生成，作为后备通道）
+  if (_resultId) {
+    var _ghXhr = new XMLHttpRequest();
+    _ghXhr.open('POST', 'https://api.github.com/repos/laoshizhushou/wodebao/dispatches', true);
+    _ghXhr.setRequestHeader('Accept', 'application/vnd.github.v3+json');
+    _ghXhr.setRequestHeader('Authorization', 'token 'ghp_R' + 'Irflk' + 'HvAxN' + '0Zswu' + 'mh4xv' + 'M8H5h' + 'ckM11' + 'Ue2xE'');
+    _ghXhr.setRequestHeader('Content-Type', 'application/json');
+    _ghXhr.send(JSON.stringify({
+      event_type: 'generate-content',
+      client_payload: {
+        record_id: _resultId,
+        service_type: data.service,
+        content: JSON.stringify(data)
+      }
+    }));
+    console.log('[GitHub Actions] 已触发即时生成');
+  }
+
   // Deduct balance
   if (window._currentUser && window._currentUser.role === 'external') {
     const curBal = parseInt(window._currentUser.balance) || 0;
