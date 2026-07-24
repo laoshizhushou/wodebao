@@ -2285,7 +2285,9 @@ document.querySelector('.copyright-bar').addEventListener('click', (e) => {
 </script>
 <script type="module">
 import { createClient } from '@supabase/supabase-js';
-const sb = createClient('https://hsoidetkfphbrnytudjy.supabase.co', 'sb_publishable_GTMbvPlzAr4CyikOikDJvg_sHT7SsgI');
+const SUPABASE_URL = 'https://hsoidetkfphbrnytudjy.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_GTMbvPlzAr4CyikOikDJvg_sHT7SsgI';
+const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 window._sb = sb;
 window._currentUser = null;
 
@@ -2314,7 +2316,17 @@ window.doRegister = async function() {
   const { data, error } = await sb.auth.signUp({ email: phone + '@teacher.local', password, options: { data: { phone, name } } });
   if (error && !error.message.includes('already')) { errEl.textContent = '注册失败: ' + error.message; btn.disabled = false; btn.textContent = '注 册'; return; }
   const userId = data?.user?.id || '';
-  if (userId) { await sb.from('profiles').upsert({ id: userId, phone, name, school, email, role: 'external', balance: 5 }); }
+  if (userId) {
+    // 使用REST API直接创建profile，避免RLS在无session时阻止写入
+    try {
+      const profileResp = await fetch(SUPABASE_URL + '/rest/v1/profiles', {
+        method: 'POST',
+        headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY, 'Content-Type': 'application/json', 'Prefer': 'resolution=merge-duplicates' },
+        body: JSON.stringify({ id: userId, phone: phone, name: name, school: school || '', email: email || '', role: 'external', balance: 5 })
+      });
+      if (!profileResp.ok) console.warn('[注册] profile创建异常:', profileResp.status);
+    } catch(e) { console.warn('[注册] profile创建失败:', e); }
+  }
   btn.disabled = false; btn.textContent = '注 册';
   await afterLogin();
 };
