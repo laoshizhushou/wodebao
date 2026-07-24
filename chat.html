@@ -1830,18 +1830,31 @@ async function _instantGenerate(recordId, data, onComplete) {
     '5. \u5185\u5bb9\u957f\u5ea6800-2000\u5b57\uff0c\u786e\u4fdd\u4fe1\u606f\u5bc6\u5ea6\u548c\u5b9e\u7528\u6027\n' +
     '6. \u76f4\u63a5\u8f93\u51fa\u5185\u5bb9\uff0c\u4e0d\u8981\u6709\u4efb\u4f55\u89e3\u91ca\u6027\u6587\u5b57\u6216\u524d\u8a00';
   try {
-    var _resp = await fetch(_url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + _k },
-      body: JSON.stringify({
+    // 使用XMLHttpRequest代替fetch，兼容微信浏览器
+    var _result = await new Promise(function(resolve, reject) {
+      var xhr = new XMLHttpRequest();
+      xhr.open('POST', _url, true);
+      xhr.setRequestHeader('Content-Type', 'application/json');
+      xhr.setRequestHeader('Authorization', 'Bearer ' + _k);
+      xhr.timeout = 60000; // 60秒超时
+      xhr.onload = function() {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          try { resolve(JSON.parse(xhr.responseText)); }
+          catch(e) { reject(new Error('JSON解析失败')); }
+        } else {
+          console.warn('[即时生成] API状态:', xhr.status, xhr.responseText.substring(0, 100));
+          reject(new Error('API响应异常:' + xhr.status));
+        }
+      };
+      xhr.onerror = function() { reject(new Error('网络请求失败(可能被微信拦截)')); };
+      xhr.ontimeout = function() { reject(new Error('请求超时')); };
+      xhr.send(JSON.stringify({
         model: 'Qwen/Qwen2.5-72B-Instruct',
         messages: [{ role: 'user', content: _prompt }],
         max_tokens: 4096,
         temperature: 0.7
-      })
+      }));
     });
-    if (!_resp.ok) { console.warn('[\u5373\u65f6\u751f\u6210] API\u54cd\u5e94\u5f02\u5e38:', _resp.status); return; }
-    var _result = await _resp.json();
     var _content = _result.choices && _result.choices[0] && _result.choices[0].message ? _result.choices[0].message.content : null;
     if (_content) {
       // 更新数据库记录
