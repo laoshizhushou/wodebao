@@ -1812,7 +1812,11 @@ function getDownloadFilename(service, data) {
 
 // ========== Form Submission ==========
 // ── 即时AI生成（硅基流动API，秒级响应）──
-async function _instantGenerate(recordId, data) {
+// 全局变量：即时生成是否已完成（供轮询判断）
+var _instantDone = false;
+var _instantContent = null;
+
+async function _instantGenerate(recordId, data, onComplete) {
   var _k = 'sk-efx' + 'vmojd' + 'sogor' + 'gyiky' + 'wkfej' + 'gaxwu' + 'dnqpi' + 'aygsd' + 'udabhnjzns';
   var _url = 'https://api.siliconflow.cn/v1/chat/completions';
   var _summary = (typeof buildSummaryText === 'function') ? buildSummaryText(data) : JSON.stringify(data);
@@ -1839,14 +1843,23 @@ async function _instantGenerate(recordId, data) {
     if (!_resp.ok) { console.warn('[\u5373\u65f6\u751f\u6210] API\u54cd\u5e94\u5f02\u5e38:', _resp.status); return; }
     var _result = await _resp.json();
     var _content = _result.choices && _result.choices[0] && _result.choices[0].message ? _result.choices[0].message.content : null;
-    if (_content && window._sb) {
-      await window._sb.from('generated_results')
-        .update({ status: 'completed', result_content: _content, completed_at: new Date().toISOString() })
-        .eq('id', recordId);
-      console.log('[\u5373\u65f6\u751f\u6210\u5b8c\u6210]', String(recordId).substring(0, 8));
+    if (_content) {
+      // 更新数据库记录
+      if (window._sb && recordId) {
+        try {
+          await window._sb.from('generated_results')
+            .update({ status: 'completed', result_content: _content, completed_at: new Date().toISOString() })
+            .eq('id', recordId);
+        } catch(e) { console.warn('[即时生成] DB更新失败:', e); }
+      }
+      // 直接显示结果（不依赖轮询）
+      _instantDone = true;
+      _instantContent = _content;
+      console.log('[即时生成完成]', String(recordId).substring(0, 8));
+      if (typeof onComplete === 'function') onComplete(_content);
     }
   } catch(e) {
-    console.warn('[\u5373\u65f6\u751f\u6210] \u5931\u8d25\uff0c\u7b49\u5f85\u540e\u7aef\u8f6e\u8be2\u5904\u7406:', e);
+    console.warn('[即时生成] 失败，等待后端轮询处理:', e);
   }
 }
 
@@ -1914,7 +1927,13 @@ async function submitForm() {
   } catch(e) { console.warn('DB save failed:', e); }
 
   // 即时调用AI生成（秒级响应，失败则等后端轮询兜底）
-  if (_resultId) { _instantGenerate(_resultId, data); }
+  // 将showResult作为回调传入，生成完成直接显示
+  if (_resultId) { _instantGenerate(_resultId, data, function(content) {
+    // 即时生成成功，直接显示结果
+    if (genDiv._timerInterval) clearInterval(genDiv._timerInterval);
+    genDiv.remove();
+    showResult(content);
+  }); }
 
   // Deduct balance
   if (window._currentUser && window._currentUser.role === 'external') {
@@ -2063,8 +2082,10 @@ async function submitForm() {
       addBotMessageWithButton('生成时间较长，需求已保存。请稍后重新提交，或返回首页稍后再试。');
       return;
     }
+    if (_instantDone) return; // 即时生成已完成，无需轮询
     window._sb.from('generated_results').select('status,result_content').eq('id', _resultId).single().then(({ data: row, error }) => {
       if (error || !row) { setTimeout(pollForResult, pollInterval); return; }
+      if (_instantDone) return; // 双重检查：防止即时生成和轮询同时触发
       if (row.status === 'completed' && row.result_content) {
         // Delete from DB so it doesn't appear in "我的" history
         if (_resultId && window._sb) {
