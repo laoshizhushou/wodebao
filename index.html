@@ -1319,53 +1319,76 @@
     </script>
 
     <script>
-    // PWA Install logic for index.html
+    // PWA Install logic - 全平台兼容
     var deferredPrompt = null;
-    var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    var ua = navigator.userAgent;
+    var isIOS = /iPad|iPhone|iPod/.test(ua) && !window.MSStream;
+    var isWeChat = /MicroMessenger/i.test(ua);
+    var isAndroid = /Android/i.test(ua);
     var isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
 
     window.addEventListener('beforeinstallprompt', function(e) {
         e.preventDefault();
         deferredPrompt = e;
-        var btn = document.getElementById('pwaInstallBtn');
-        if (btn && !isStandalone) {
-            btn.textContent = '添加到桌面';
-            btn.style.display = '';
-        }
     });
 
     function handlePwaInstall() {
         var btn = document.getElementById('pwaInstallBtn');
-        // If already standalone, hide
+        var steps = document.getElementById('pwaSteps');
+
+        // 已安装
         if (isStandalone) {
             btn.textContent = '已安装 ✓';
             btn.classList.add('installed');
             return;
         }
-        // Android / Chrome: use beforeinstallprompt
+
+        // 微信浏览器：不支持PWA，提示用外部浏览器打开
+        if (isWeChat) {
+            steps.innerHTML = '<ol><li>点击右上角 <b>⋯</b> 菜单</li><li>选择 <b>「在浏览器打开」</b></li><li>在浏览器中打开后，再点击「添加到桌面」</li></ol>';
+            steps.classList.add('show');
+            btn.textContent = '请在外部浏览器中打开';
+            btn.style.fontSize = '12px';
+            return;
+        }
+
+        // Android Chrome / Edge：使用 beforeinstallprompt
         if (deferredPrompt) {
             deferredPrompt.prompt();
             deferredPrompt.userChoice.then(function(result) {
                 if (result.outcome === 'accepted') {
                     btn.textContent = '已安装 ✓';
                     btn.classList.add('installed');
+                    steps.classList.remove('show');
                 }
                 deferredPrompt = null;
             });
             return;
         }
-        // iOS Safari: show manual steps
+
+        // iOS Safari：手动操作步骤
         if (isIOS) {
-            var steps = document.getElementById('pwaSteps');
-            steps.classList.toggle('show');
+            steps.innerHTML = '<ol><li>点击底部的 <b>分享按钮</b> <span style="font-size:16px">⬆️</span></li><li>向下滑动找到 <b>「添加到主屏幕」</b></li><li>点击右上角 <b>「添加」</b> 确认</li></ol>';
+            steps.classList.add('show');
             btn.textContent = '按上方步骤操作';
             btn.style.fontSize = '12px';
-            btn.style.padding = '10px 20px';
             return;
         }
-        // Fallback: already installed or not supported
-        btn.textContent = '已安装 ✓';
-        btn.classList.add('installed');
+
+        // 其他 Android 浏览器（UC/夸克等）
+        if (isAndroid) {
+            steps.innerHTML = '<ol><li>点击浏览器右上角 <b>⋮</b> 菜单</li><li>选择 <b>「添加到主屏幕」</b> 或 <b>「安装应用」</b></li><li>确认即可</li></ol>';
+            steps.classList.add('show');
+            btn.textContent = '按上方步骤操作';
+            btn.style.fontSize = '12px';
+            return;
+        }
+
+        // 兜底
+        steps.innerHTML = '<p>请尝试使用浏览器菜单中的「添加到主屏幕」功能。</p>';
+        steps.classList.add('show');
+        btn.textContent = '请通过浏览器菜单操作';
+        btn.style.fontSize = '12px';
     }
 
     // Check if already installed
