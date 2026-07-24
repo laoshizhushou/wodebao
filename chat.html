@@ -75,7 +75,7 @@
   @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.6;} }
 
   /* ========== Messages ========== */
-  .chat-messages { flex:1; overflow-y:auto; padding: 20px 16px; background: #f8f9fc; }
+  .chat-messages { flex:1; overflow-y:auto; min-height:0; padding: 20px 16px; background: #f8f9fc; }
   .chat-messages::-webkit-scrollbar { width: 5px; }
   .chat-messages::-webkit-scrollbar-thumb { background: #c7c9d1; border-radius: 3px; }
 
@@ -1080,6 +1080,9 @@ const EXAMPLES = {
 // ========== Form Rendering ==========
 function showForm(type) {
   formArea.classList.remove('hidden');
+  // Reset submit button state (fix: button stuck at "提交中...")
+  const submitBtn = formArea.querySelector('.btn-submit');
+  if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = '提交需求'; }
   const titles = {
     jiaoan:'生成教案', chujuan:'智能出卷', jianyi:'教学建议',
     deyu:'德育助手', jiaowu:'教务助手', xiaozhang:'校长小助手',
