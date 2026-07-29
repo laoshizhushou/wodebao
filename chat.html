@@ -1817,72 +1817,34 @@ var _instantDone = false;
 var _instantContent = null;
 
 async function _instantGenerate(recordId, data, onComplete) {
-  var _k = 'sk-efx' + 'vmojd' + 'sogor' + 'gyiky' + 'wkfej' + 'gaxwu' + 'dnqpi' + 'aygsd' + 'udabhnjzns';
-  var _url = 'https://api.siliconflow.cn/v1/chat/completions';
-  var _summary = (typeof buildSummaryText === 'function') ? buildSummaryText(data) : JSON.stringify(data);
-  var _prompt = '\u4f60\u662f\u4e00\u4f4d\u7ecf\u9a8c\u4e30\u5bcc\u7684\u4e2d\u56fd\u57fa\u7840\u6559\u80b2\u4e13\u5bb6\uff0c\u8bf7\u6839\u636e\u4ee5\u4e0b\u9700\u6c42\u751f\u6210\u4e00\u4efd\u4e13\u4e1a\u3001\u8be6\u5b9e\u3001\u53ef\u76f4\u63a5\u4f7f\u7528\u7684\u6559\u80b2\u5185\u5bb9\u3002\n\n' +
-    _summary + '\n\n' +
-    '\u3010\u751f\u6210\u8981\u6c42\u3011\n' +
-    '1. \u5185\u5bb9\u5fc5\u987b\u7528\u4e2d\u6587\u64b0\u5199\uff0c\u4e13\u4e1a\u3001\u8be6\u5b9e\u3001\u53ef\u843d\u5730\u4f7f\u7528\n' +
-    '2. \u7ed3\u6784\u6e05\u6670\uff0c\u4f7f\u7528 Markdown \u683c\u5f0f\uff08\u6807\u9898\u3001\u5217\u8868\u3001\u8868\u683c\u7b49\uff09\n' +
-    '3. \u6839\u636e\u9700\u6c42\u4e2d\u7684\u5b66\u6bb5\u3001\u5b66\u79d1\u3001\u6559\u6750\u7248\u672c\u7b49\u6761\u4ef6\u7cbe\u51c6\u5339\u914d\u5185\u5bb9\n' +
-    '4. \u5982\u6709\u5177\u4f53\u4e3b\u9898\u6216\u95ee\u9898\u63cf\u8ff0\uff0c\u56f4\u7ed5\u5176\u5c55\u5f00\uff1b\u5982\u65e0\uff0c\u5219\u6309\u8be5\u7c7b\u578b\u901a\u7528\u6700\u4f73\u5b9e\u8df5\u751f\u6210\n' +
-    '5. \u5185\u5bb9\u957f\u5ea6800-2000\u5b57\uff0c\u786e\u4fdd\u4fe1\u606f\u5bc6\u5ea6\u548c\u5b9e\u7528\u6027\n' +
-    '6. \u76f4\u63a5\u8f93\u51fa\u5185\u5bb9\uff0c\u4e0d\u8981\u6709\u4efb\u4f55\u89e3\u91ca\u6027\u6587\u5b57\u6216\u524d\u8a00';
-  var _body = JSON.stringify({
-    model: 'Qwen/Qwen2.5-72B-Instruct',
-    messages: [{ role: 'user', content: _prompt }],
-    max_tokens: 4096,
-    temperature: 0.7
-  });
-  // 尝试调用API，失败则自动走代理（兼容微信浏览器）
-  async function _tryApi(targetUrl) {
-    return new Promise(function(resolve, reject) {
-      var xhr = new XMLHttpRequest();
-      xhr.open('POST', targetUrl, true);
-      xhr.setRequestHeader('Content-Type', 'application/json');
-      xhr.setRequestHeader('Authorization', 'Bearer ' + _k);
-      xhr.timeout = 60000;
-      xhr.onload = function() {
-        if (xhr.status >= 200 && xhr.status < 300) {
-          try { resolve(JSON.parse(xhr.responseText)); }
-          catch(e) { reject(new Error('JSON解析失败')); }
-        } else {
-          reject(new Error('API状态:' + xhr.status));
-        }
-      };
-      xhr.onerror = function() { reject(new Error('网络失败')); };
-      xhr.ontimeout = function() { reject(new Error('超时')); };
-      xhr.send(_body);
-    });
-  }
-  var _proxyUrl = 'https://cors-proxy-kokodev.netlify.app/?url=https%3A%2F%2Fapi.siliconflow.cn%2Fv1%2Fchat%2Fcompletions';
+  // 调用后端流式API生成，API Key安全地保存在服务器上
+  // 使用非流式接口（更稳定），后端使用专属智能体提示词
   try {
-    var _result;
-    try {
-      _result = await _tryApi(_url); // 先直连
-    } catch(e1) {
-      console.warn('[即时生成] 直连失败，尝试代理:', e1.message);
-      _result = await _tryApi(_proxyUrl); // 走代理
+    var resp = await fetch('/api/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        service_type: data.service,
+        form_data: data,
+        user_id: window._currentUser ? window._currentUser.id : null,
+        record_id: recordId || null
+      })
+    });
+    if (!resp.ok) {
+      console.warn('[AI生成] HTTP错误:', resp.status);
+      return;
     }
-    var _content = _result.choices && _result.choices[0] && _result.choices[0].message ? _result.choices[0].message.content : null;
-    if (_content) {
-      // 更新数据库记录
-      if (window._sb && recordId) {
-        try {
-          await window._sb.from('generated_results')
-            .update({ status: 'completed', result_content: _content, completed_at: new Date().toISOString() })
-            .eq('id', recordId);
-        } catch(e) { console.warn('[即时生成] DB更新失败:', e); }
-      }
-      // 直接显示结果（不依赖轮询）
+    var result = await resp.json();
+    if (result.success && result.content) {
       _instantDone = true;
-      _instantContent = _content;
-      console.log('[即时生成完成]', String(recordId).substring(0, 8));
-      if (typeof onComplete === 'function') onComplete(_content);
+      _instantContent = result.content;
+      console.log('[AI生成完成]', String(recordId).substring(0, 8), '长度:', result.content.length);
+      if (typeof onComplete === 'function') onComplete(result.content);
+    } else if (result.error) {
+      console.warn('[AI生成] 服务端错误:', result.error);
     }
   } catch(e) {
-    console.warn('[即时生成] 失败，等待后端轮询处理:', e);
+    console.warn('[AI生成] 失败，等待后端轮询处理:', e);
   }
 }
 
