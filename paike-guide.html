@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>排课资料上传指引 - 老师的小助手</title>
+<style>
+  *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    background: linear-gradient(135deg, #e0f7fa 0%, #b2ebf2 30%, #e0f2f1 60%, #c8e6c9 100%);
+    color: #333;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    padding-bottom: 40px;
+  }
+
+  .container {
+    max-width: 480px;
+    margin: 0 auto;
+    padding: 0 16px;
+  }
+
+  /* Header */
+  .header {
+    background: linear-gradient(135deg, #00897B 0%, #26A69A 50%, #4DB6AC 100%);
+    color: #fff;
+    padding: 24px 20px;
+    text-align: center;
+    box-shadow: 0 4px 20px rgba(0,137,123,0.3);
+    margin-bottom: 24px;
+  }
+  .header h1 {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: 1px;
+  }
+  .header .subtitle {
+    font-size: 13px;
+    opacity: 0.85;
+    margin-top: 8px;
+    line-height: 1.5;
+  }
+
+  /* Step Card */
+  .step-card {
+    background: #fff;
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 16px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    position: relative;
+    overflow: hidden;
+  }
+  .step-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 4px;
+    height: 100%;
+    background: linear-gradient(180deg, #00897B, #4DB6AC);
+  }
+
+  .step-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+  .step-number {
+    width: 32px;
+    height: 32px;
+    background: linear-gradient(135deg, #00897B, #26A69A);
+    color: #fff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  .step-title {
+    font-size: 17px;
+    font-weight: 700;
+    color: #00796B;
+  }
+  .step-desc {
+    font-size: 14px;
+    color: #555;
+    line-height: 1.7;
+    padding-left: 44px;
+  }
+  .step-desc p {
+    margin-bottom: 8px;
+  }
+
+  /* File List */
+  .file-list {
+    background: #F5F5F5;
+    border-radius: 12px;
+    padding: 14px;
+    margin: 12px 0;
+  }
+  .file-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 8px 0;
+    border-bottom: 1px solid #E0E0E0;
+  }
+  .file-item:last-child { border-bottom: none; }
+  .file-icon {
+    font-size: 20px;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  .file-info {
+    flex: 1;
+  }
+  .file-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 2px;
+  }
+  .file-desc {
+    font-size: 12px;
+    color: #777;
+    line-height: 1.5;
+  }
+  .file-required {
+    display: inline-block;
+    background: #FF7043;
+    color: #fff;
+    font-size: 10px;
+    padding: 1px 6px;
+    border-radius: 8px;
+    margin-left: 6px;
+    font-weight: 600;
+  }
+  .file-optional {
+    display: inline-block;
+    background: #90A4AE;
+    color: #fff;
+    font-size: 10px;
+    padding: 1px 6px;
+    border-radius: 8px;
+    margin-left: 6px;
+    font-weight: 600;
+  }
+
+  /* Format Tip */
+  .format-tip {
+    background: linear-gradient(135deg, #E8F5E9, #C8E6C9);
+    border-radius: 12px;
+    padding: 14px;
+    margin-top: 12px;
+    border-left: 4px solid #43A047;
+  }
+  .format-tip .tip-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: #2E7D32;
+    margin-bottom: 6px;
+  }
+  .format-tip .tip-content {
+    font-size: 13px;
+    color: #333;
+    line-height: 1.6;
+  }
+  .format-tip code {
+    background: rgba(255,255,255,0.7);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-family: 'Menlo', 'Consolas', monospace;
+  }
+
+  /* Email Box */
+  .email-box {
+    background: linear-gradient(135deg, #E3F2FD, #BBDEFB);
+    border-radius: 16px;
+    padding: 20px;
+    text-align: center;
+    margin: 20px 0;
+    border: 2px dashed #42A5F5;
+  }
+  .email-box .email-label {
+    font-size: 13px;
+    color: #1565C0;
+    margin-bottom: 8px;
+    font-weight: 600;
+  }
+  .email-box .email-address {
+    font-size: 18px;
+    font-weight: 700;
+    color: #0D47A1;
+    letter-spacing: 0.5px;
+    word-break: break-all;
+  }
+  .email-box .email-hint {
+    font-size: 12px;
+    color: #1976D2;
+    margin-top: 8px;
+    line-height: 1.5;
+  }
+
+  /* Template Area */
+  .template-area {
+    background: #fff;
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 16px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+  }
+  .template-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #00796B;
+    margin-bottom: 12px;
+    text-align: center;
+  }
+  .template-content {
+    background: #FAFAFA;
+    border: 1px solid #E0E0E0;
+    border-radius: 12px;
+    padding: 14px;
+    font-size: 13px;
+    line-height: 1.8;
+    color: #333;
+    white-space: pre-wrap;
+    font-family: 'Menlo', 'Consolas', monospace;
+    max-height: 300px;
+    overflow-y: auto;
+  }
+  .btn-copy {
+    width: 100%;
+    padding: 12px;
+    border: none;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #00897B, #26A69A);
+    color: #fff;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    margin-top: 12px;
+    transition: all 0.2s;
+  }
+  .btn-copy:active { transform: scale(0.97); }
+  .btn-copy.copied {
+    background: linear-gradient(135deg, #43A047, #66BB6A);
+  }
+
+  /* Back button */
+  .back-btn {
+    display: block;
+    text-align: center;
+    padding: 14px;
+    background: #fff;
+    border-radius: 14px;
+    color: #00796B;
+    font-size: 15px;
+    font-weight: 600;
+    text-decoration: none;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    margin-top: 8px;
+    transition: all 0.2s;
+  }
+  .back-btn:active { background: #E0F2F1; }
+
+  /* Warning */
+  .warning-box {
+    background: linear-gradient(135deg, #FFF3E0, #FFE0B2);
+    border-radius: 12px;
+    padding: 14px;
+    margin: 16px 0;
+    border-left: 4px solid #FF9800;
+  }
+  .warning-box .warning-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: #E65100;
+    margin-bottom: 6px;
+  }
+  .warning-box .warning-content {
+    font-size: 13px;
+    color: #333;
+    line-height: 1.6;
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>📋 排课资料上传指引</h1>
+  <div class="subtitle">尊敬的教务主任，您好！<br>请按以下指引提供资料，AI将为您精准排课</div>
+</div>
+
+<div class="container">
+
+  <!-- Step 1 -->
+  <div class="step-card">
+    <div class="step-header">
+      <div class="step-number">1</div>
+      <div class="step-title">准备教师信息表 <span class="file-required">必需</span></div>
+    </div>
+    <div class="step-desc">
+      <p>请提供全校或相关年级教师的完整信息，包括：</p>
+      <div class="file-list">
+        <div class="file-item">
+          <div class="file-icon">👤</div>
+          <div class="file-info">
+            <div class="file-name">教师姓名</div>
+            <div class="file-desc">每位教师的真实姓名</div>
+          </div>
+        </div>
+        <div class="file-item">
+          <div class="file-icon">📚</div>
+          <div class="file-info">
+            <div class="file-name">任教科目</div>
+            <div class="file-desc">如：语文、数学、英语等</div>
+          </div>
+        </div>
+        <div class="file-item">
+          <div class="file-icon">🏫</div>
+          <div class="file-info">
+            <div class="file-name">任教班级</div>
+            <div class="file-desc">如：三年级1班、七年级2班等（可多班）</div>
+          </div>
+        </div>
+        <div class="file-item">
+          <div class="file-icon">⏰</div>
+          <div class="file-info">
+            <div class="file-name">周课时量</div>
+            <div class="file-desc">每位教师每周需上的课时数</div>
+          </div>
+        </div>
+      </div>
+      <div class="format-tip">
+        <div class="tip-title">💡 推荐格式（Excel 或 文字均可）</div>
+        <div class="tip-content">
+          张老师 | 语文 | 三(1)班,三(2)班 | 12节/周<br>
+          李老师 | 数学 | 三(1)班 | 10节/周<br>
+          王老师 | 英语 | 三(2)班,三(3)班 | 14节/周
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Step 2 -->
+  <div class="step-card">
+    <div class="step-header">
+      <div class="step-number">2</div>
+      <div class="step-title">班级课程设置 <span class="file-required">必需</span></div>
+    </div>
+    <div class="step-desc">
+      <p>每个班级每周需要安排哪些课程、各几节：</p>
+      <div class="file-list">
+        <div class="file-item">
+          <div class="file-icon">📖</div>
+          <div class="file-info">
+            <div class="file-name">课程名称</div>
+            <div class="file-desc">语文、数学、英语、体育、音乐、美术等</div>
+          </div>
+        </div>
+        <div class="file-item">
+          <div class="file-icon">🔢</div>
+          <div class="file-info">
+            <div class="file-name">每周课时数</div>
+            <div class="file-desc">该课程每周需要几节课</div>
+          </div>
+        </div>
+      </div>
+      <div class="format-tip">
+        <div class="tip-title">💡 示例</div>
+        <div class="tip-content">
+          三年级1班：<br>
+          语文7节、数学5节、英语3节、体育2节、音乐1节、美术1节、科学1节、道德与法治1节<br><br>
+          每周总课时：21节（每天约4-5节）
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Step 3 -->
+  <div class="step-card">
+    <div class="step-header">
+      <div class="step-number">3</div>
+      <div class="step-title">时间约束条件 <span class="file-required">必需</span></div>
+    </div>
+    <div class="step-desc">
+      <p>请提供学校的时间安排规则：</p>
+      <div class="file-list">
+        <div class="file-item">
+          <div class="file-icon">🕐</div>
+          <div class="file-info">
+            <div class="file-name">作息时间</div>
+            <div class="file-desc">每天几节课、每节课时长、课间休息时间</div>
+          </div>
+        </div>
+        <div class="file-item">
+          <div class="file-icon">📅</div>
+          <div class="file-info">
+            <div class="file-name">上课天数</div>
+            <div class="file-desc">每周上5天还是6天课</div>
+          </div>
+        </div>
+        <div class="file-item">
+          <div class="file-icon">🚫</div>
+          <div class="file-info">
+            <div class="file-name">特殊时段</div>
+            <div class="file-desc">如：周一第一节不排课（升旗仪式）、下午第一节不排主科等</div>
+          </div>
+        </div>
+      </div>
+      <div class="format-tip">
+        <div class="tip-title">💡 示例</div>
+        <div class="tip-content">
+          每天6节课，每节40分钟，课间10分钟<br>
+          大课间：上午第2-3节之间20分钟<br>
+          每周5天（周一至周五）<br>
+          周一第1节为班会/升旗，不排文化课
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Step 4 -->
+  <div class="step-card">
+    <div class="step-header">
+      <div class="step-number">4</div>
+      <div class="step-title">教师个人约束 <span class="file-optional">选填</span></div>
+    </div>
+    <div class="step-desc">
+      <p>如有教师个人时间限制，请一并提供：</p>
+      <div class="file-list">
+        <div class="file-item">
+          <div class="file-icon">🏥</div>
+          <div class="file-info">
+            <div class="file-name">请假/不可用时间</div>
+            <div class="file-desc">如：张老师周三下午不排课（进修）</div>
+          </div>
+        </div>
+        <div class="file-item">
+          <div class="file-icon">🔗</div>
+          <div class="file-info">
+            <div class="file-name">连堂要求</div>
+            <div class="file-desc">如：作文课需连排2节、实验课需连排2节</div>
+          </div>
+        </div>
+        <div class="file-item">
+          <div class="file-icon">⚠️</div>
+          <div class="file-info">
+            <div class="file-name">同头课错开</div>
+            <div class="file-desc">如：同年级语文老师的课不能同一节（需互相听课）</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Step 5 -->
+  <div class="step-card">
+    <div class="step-header">
+      <div class="step-number">5</div>
+      <div class="step-title">教室资源（如有）<span class="file-optional">选填</span></div>
+    </div>
+    <div class="step-desc">
+      <p>如果有专用教室限制，请说明：</p>
+      <div class="file-list">
+        <div class="file-item">
+          <div class="file-icon">🔬</div>
+          <div class="file-info">
+            <div class="file-name">专用教室</div>
+            <div class="file-desc">如：实验室1间、音乐室1间、微机室1间，同一时间只能一个班使用</div>
+          </div>
+        </div>
+        <div class="file-item">
+          <div class="file-icon">🏟️</div>
+          <div class="file-info">
+            <div class="file-name">操场/体育馆</div>
+            <div class="file-desc">同时上体育课的班级数量限制</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Email Section -->
+  <div class="email-box">
+    <div class="email-label">📧 资料请发送至以下邮箱</div>
+    <div class="email-address">laoshizhushou@coze.email</div>
+    <div class="email-hint">
+      邮件标题格式：<strong>【排课资料】XX学校</strong><br>
+      可将文件作为附件发送，也可直接粘贴文字内容<br>
+      支持 Excel、Word、TXT、图片 等格式
+    </div>
+  </div>
+
+  <!-- Template -->
+  <div class="template-area">
+    <div class="template-title">📝 邮件模板（点击复制）</div>
+    <div class="template-content" id="emailTemplate">【排课资料】XX学校 2026年秋季学期
+
+=== 教师信息 ===
+张老师 | 语文 | 三(1)班,三(2)班 | 12节/周
+李老师 | 数学 | 三(1)班 | 10节/周
+王老师 | 英语 | 三(2)班,三(3)班 | 14节/周
+赵老师 | 体育 | 三(1)班,三(2)班,三(3)班 | 9节/周
+（请继续添加更多教师...）
+
+=== 班级课程 ===
+三年级1班：语文7、数学5、英语3、体育2、音乐1、美术1、科学1、道法1（共21节/周）
+三年级2班：语文7、数学5、英语3、体育2、音乐1、美术1、科学1、道法1（共21节/周）
+三年级3班：语文7、数学5、英语3、体育2、音乐1、美术1、科学1、道法1（共21节/周）
+
+=== 时间安排 ===
+每天6节课，每节40分钟
+每周5天（周一至周五）
+周一第1节为班会，不排文化课
+
+=== 特殊约束 ===
+- 张老师周三下午不排课（进修）
+- 作文课需连排2节
+- 同年级同学科不排同一节
+
+=== 教室资源 ===
+实验室1间、音乐室1间、微机室1间
+同时最多2个班上体育课</div>
+    <button class="btn-copy" id="copyBtn" onclick="copyTemplate()">📋 复制模板</button>
+  </div>
+
+  <!-- Warning -->
+  <div class="warning-box">
+    <div class="warning-title">⚠️ 温馨提示</div>
+    <div class="warning-content">
+      1. 资料越详细，排课结果越准确<br>
+      2. 标注"必需"的材料请务必提供<br>
+      3. 收到资料后1-24小时内生成课表<br>
+      4. 如需调整，可再次联系修改
+    </div>
+  </div>
+
+  <!-- Back -->
+  <a href="./chat.html" class="back-btn">← 返回聊天界面</a>
+
+</div>
+
+<script>
+function copyTemplate() {
+  const text = document.getElementById('emailTemplate').innerText;
+  const btn = document.getElementById('copyBtn');
+  
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(() => copySuccess(btn)).catch(() => fallbackCopy(text, btn));
+  } else {
+    fallbackCopy(text, btn);
+  }
+}
+
+function fallbackCopy(text, btn) {
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.cssText = 'position:fixed;left:-9999px;';
+  document.body.appendChild(ta);
+  ta.select();
+  try { document.execCommand('copy'); copySuccess(btn); }
+  catch(e) { alert('复制失败，请手动选择复制'); }
+  document.body.removeChild(ta);
+}
+
+function copySuccess(btn) {
+  btn.innerHTML = '✅ 已复制！';
+  btn.classList.add('copied');
+  setTimeout(() => {
+    btn.innerHTML = '📋 复制模板';
+    btn.classList.remove('copied');
+  }, 2000);
+}
+</script>
+
+</body>
+</html>

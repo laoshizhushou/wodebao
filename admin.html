@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>老师的小能手 - 管理后台</title>
+<script src="pb_config.js"></script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f5; color: #333; }
+.header { background: #fff; padding: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center; }
+.header h1 { font-size: 24px; color: #1a73e8; }
+.header .logout { background: #dc3545; color: #fff; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; }
+.container { max-width: 1400px; margin: 20px auto; padding: 0 20px; }
+.stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; }
+.stat-card { background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+.stat-card .label { font-size: 14px; color: #666; margin-bottom: 8px; }
+.stat-card .value { font-size: 32px; font-weight: bold; color: #1a73e8; }
+.stat-card .trend { font-size: 12px; color: #28a745; margin-top: 4px; }
+.tabs { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+.tab { padding: 10px 20px; background: #fff; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; transition: all 0.3s; }
+.tab.active { background: #1a73e8; color: #fff; border-color: #1a73e8; }
+.tab:hover { background: #e3f2fd; }
+.content { background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+.toolbar { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+.toolbar button { padding: 8px 16px; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; background: #fff; }
+.toolbar button:hover { background: #f0f0f0; }
+.toolbar .btn-primary { background: #1a73e8; color: #fff; border-color: #1a73e8; }
+.toolbar .btn-danger { background: #dc3545; color: #fff; border-color: #dc3545; }
+.toolbar .btn-success { background: #28a745; color: #fff; border-color: #28a745; }
+table { width: 100%; border-collapse: collapse; }
+th, td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; }
+th { background: #f8f9fa; font-weight: 600; }
+tr:hover { background: #f8f9fa; }
+.badge { padding: 4px 8px; border-radius: 12px; font-size: 12px; }
+.badge-success { background: #d4edda; color: #155724; }
+.badge-warning { background: #fff3cd; color: #856404; }
+.badge-danger { background: #f8d7da; color: #721c24; }
+.badge-info { background: #d1ecf1; color: #0c5460; }
+.checkbox { width: 18px; height: 18px; cursor: pointer; }
+.login-container { max-width: 400px; margin: 100px auto; background: #fff; padding: 40px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+.login-container h2 { text-align: center; margin-bottom: 30px; color: #1a73e8; }
+.login-container input { width: 100%; padding: 12px; margin-bottom: 20px; border: 1px solid #ddd; border-radius: 4px; }
+.login-container button { width: 100%; padding: 12px; background: #1a73e8; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; }
+.hidden { display: none !important; }
+.empty-state { text-align: center; padding: 60px 20px; color: #999; }
+.pagination { display: flex; justify-content: center; gap: 10px; margin-top: 20px; }
+.pagination button { padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; background: #fff; }
+.pagination button.active { background: #1a73e8; color: #fff; border-color: #1a73e8; }
+.modal { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+.modal-content { background: #fff; padding: 30px; border-radius: 8px; max-width: 500px; width: 90%; max-height: 80vh; overflow-y: auto; }
+.modal-content h3 { margin-bottom: 20px; }
+.modal-content .form-group { margin-bottom: 15px; }
+.modal-content label { display: block; margin-bottom: 5px; font-weight: 500; }
+.modal-content input, .modal-content select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; }
+.modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+.toast { position: fixed; top: 20px; right: 20px; padding: 12px 24px; border-radius: 4px; color: #fff; z-index: 2000; animation: slideIn 0.3s; }
+.toast-success { background: #28a745; }
+.toast-error { background: #dc3545; }
+@keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+</style>
+</head>
+<body>
+
+<div id="loginPage" class="login-container">
+  <h2>管理后台登录</h2>
+  <input type="email" id="loginEmail" placeholder="邮箱" value="admin@laoshizhushou.com">
+  <input type="password" id="loginPassword" placeholder="密码">
+  <button onclick="doLogin()">登录</button>
+</div>
+
+<div id="mainPage" class="hidden">
+  <div class="header">
+    <h1> 老师的小能手 - 管理后台</h1>
+    <button class="logout" onclick="doLogout()">退出</button>
+  </div>
+  
+  <div class="container">
+    <!-- 统计卡片 -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="label">用户总数</div>
+        <div class="value" id="statUsers">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">生成记录</div>
+        <div class="value" id="statResults">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">反馈数</div>
+        <div class="value" id="statFeedbacks">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">充值请求</div>
+        <div class="value" id="statRecharges">0</div>
+      </div>
+    </div>
+
+    <!-- Tab 切换 -->
+    <div class="tabs">
+      <div class="tab active" data-tab="users" onclick="switchTab('users')">👥 用户管理</div>
+      <div class="tab" data-tab="results" onclick="switchTab('results')">📝 生成记录</div>
+      <div class="tab" data-tab="feedbacks" onclick="switchTab('feedbacks')">💬 反馈</div>
+      <div class="tab" data-tab="recharges" onclick="switchTab('recharges')">💰 充值请求</div>
+    </div>
+
+    <!-- 内容区 -->
+    <div class="content">
+      <!-- 工具栏 -->
+      <div class="toolbar" id="toolbar">
+        <button class="btn-primary" onclick="loadCurrentTab()">🔄 刷新</button>
+        <button class="btn-success" onclick="exportCSV()">📥 导出 CSV</button>
+        <button class="btn-danger" id="batchDeleteBtn" onclick="batchDelete()" style="display:none">🗑️ 批量删除</button>
+      </div>
+
+      <!-- 表格 -->
+      <div id="tableContainer"></div>
+
+      <!-- 分页 -->
+      <div class="pagination" id="pagination"></div>
+    </div>
+  </div>
+</div>
+
+<!-- 编辑用户模态框 -->
+<div id="editUserModal" class="modal hidden">
+  <div class="modal-content">
+    <h3>编辑用户</h3>
+    <div class="form-group">
+      <label>邮箱</label>
+      <input type="email" id="editUserEmail">
+    </div>
+    <div class="form-group">
+      <label>姓名</label>
+      <input type="text" id="editUserName">
+    </div>
+    <div class="form-group">
+      <label>手机</label>
+      <input type="text" id="editUserPhone">
+    </div>
+    <div class="form-group">
+      <label>学校</label>
+      <input type="text" id="editUserSchool">
+    </div>
+    <div class="form-group">
+      <label>角色</label>
+      <select id="editUserRole">
+        <option value="school">school (本校免费)</option>
+        <option value="external">external (外部付费)</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>余额</label>
+      <input type="number" id="editUserBalance" step="0.01">
+    </div>
+    <div class="form-group">
+      <label>管理员</label>
+      <select id="editUserIsAdmin">
+        <option value="false">否</option>
+        <option value="true">是</option>
+      </select>
+    </div>
+    <div class="modal-actions">
+      <button onclick="closeModal('editUserModal')">取消</button>
+      <button class="btn-primary" onclick="saveUser()">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- 详情弹窗 -->
+<div id="detailModal" class="modal hidden">
+  <div class="modal-content" style="max-width:700px">
+    <h3>详情</h3>
+    <div class="detail-body" style="margin-bottom:20px"></div>
+    <div class="modal-actions">
+      <button class="btn-primary" onclick="closeDetailModal()">关闭</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let authToken = '';
+let currentTab = 'users';
+let currentData = [];
+let currentPage = 1;
+let pageSize = 20;
+let selectedIds = new Set();
+
+async function doLogin() {
+  const email = document.getElementById('loginEmail').value;
+  const password = document.getElementById('loginPassword').value;
+  
+  try {
+    const res = await fetch(`${PB_URL}/api/admins/auth-with-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ identity: email, password: password })
+    });
+    
+    if (!res.ok) throw new Error('登录失败');
+    
+    const data = await res.json();
+    authToken = data.token;
+    localStorage.setItem('pb_admin_token', authToken);
+    
+    document.getElementById('loginPage').classList.add('hidden');
+    document.getElementById('mainPage').classList.remove('hidden');
+    
+    loadStats();
+    loadCurrentTab();
+  } catch (e) {
+    showToast('登录失败: ' + e.message, 'error');
+  }
+}
+
+function doLogout() {
+  authToken = '';
+  localStorage.removeItem('pb_admin_token');
+  document.getElementById('mainPage').classList.add('hidden');
+  document.getElementById('loginPage').classList.remove('hidden');
+}
+
+async function loadStats() {
+  try {
+    const [usersRes, resultsRes, feedbacksRes, rechargesRes] = await Promise.all([
+      fetch(`${PB_URL}/api/collections/users/records?perPage=1&page=1`, { headers: { 'Authorization': authToken } }),
+      fetch(`${PB_URL}/api/collections/generated_results/records?perPage=1&page=1`, { headers: { 'Authorization': authToken } }),
+      fetch(`${PB_URL}/api/collections/feedbacks/records?perPage=1&page=1`, { headers: { 'Authorization': authToken } }),
+      fetch(`${PB_URL}/api/collections/recharge_requests/records?perPage=1&page=1`, { headers: { 'Authorization': authToken } })
+    ]);
+    
+    document.getElementById('statUsers').textContent = (await usersRes.json()).totalItems || 0;
+    document.getElementById('statResults').textContent = (await resultsRes.json()).totalItems || 0;
+    document.getElementById('statFeedbacks').textContent = (await feedbacksRes.json()).totalItems || 0;
+    document.getElementById('statRecharges').textContent = (await rechargesRes.json()).totalItems || 0;
+  } catch (e) {
+    console.error('加载统计失败:', e);
+  }
+}
+
+function switchTab(tab) {
+  currentTab = tab;
+  currentPage = 1;
+  selectedIds.clear();
+  
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
+  
+  loadCurrentTab();
+}
+
+async function loadCurrentTab() {
+  const containers = {
+    users: loadUsers,
+    results: loadResults,
+    feedbacks: loadFeedbacks,
+    recharges: loadRecharges
+  };
+  
+  await containers[currentTab]();
+}
+
+async function loadUsers() {
+  try {
+    const res = await fetch(`${PB_URL}/api/collections/users/records?page=${currentPage}&perPage=${pageSize}&sort=-created`, {
+      headers: { 'Authorization': authToken }
+    });
+    const data = await res.json();
+    currentData = data.items || [];
+    
+    let html = `<table><thead><tr>
+      <th><input type="checkbox" class="checkbox" onchange="toggleSelectAll(this)"></th>
+      <th>邮箱</th><th>姓名</th><th>手机</th><th>学校</th><th>角色</th><th>余额</th><th>管理员</th><th>注册时间</th><th>操作</th>
+    </tr></thead><tbody>`;
+    
+    currentData.forEach(u => {
+      const roleBadge = u.role === 'external' ? '<span class="badge badge-warning">external</span>' : '<span class="badge badge-success">school</span>';
+      const adminBadge = u.is_admin ? '<span class="badge badge-info">是</span>' : '<span class="badge">否</span>';
+      
+      html += `<tr>
+        <td><input type="checkbox" class="checkbox" value="${u.id}" onchange="toggleSelect('${u.id}')"></td>
+        <td>${u.email || '-'}</td>
+        <td>${u.name || '-'}</td>
+        <td>${u.phone || '-'}</td>
+        <td>${u.school || '-'}</td>
+        <td>${roleBadge}</td>
+        <td>¥${u.balance || 0}</td>
+        <td>${adminBadge}</td>
+        <td>${u.created ? new Date(u.created).toLocaleString('zh-CN') : '-'}</td>
+        <td>
+          <button onclick="editUser('${u.id}')" style="padding:4px 8px;background:#1a73e8;color:#fff;border:none;border-radius:4px;cursor:pointer;margin-right:4px">编辑</button>
+          <button onclick="deleteUser('${u.id}','${(u.name||u.email||'').replace(/'/g,"\\'")}')" style="padding:4px 8px;background:#dc3545;color:#fff;border:none;border-radius:4px;cursor:pointer">删除</button>
+        </td>
+      </tr>`;
+    });
+    
+    html += '</tbody></table>';
+    document.getElementById('tableContainer').innerHTML = currentData.length ? html : '<div class="empty-state">暂无数据</div>';
+    
+    renderPagination(data.totalItems || 0);
+  } catch (e) {
+    showToast('加载用户失败: ' + e.message, 'error');
+  }
+}
+
+async function loadResults() {
+  try {
+    const res = await fetch(`${PB_URL}/api/collections/generated_results/records?page=${currentPage}&perPage=${pageSize}&sort=-created`, {
+      headers: { 'Authorization': authToken }
+    });
+    const data = await res.json();
+    currentData = data.items || [];
+    
+    let html = `<table><thead><tr>
+      <th><input type="checkbox" class="checkbox" onchange="toggleSelectAll(this)"></th>
+      <th>用户ID</th><th>服务类型</th><th>状态</th><th>创建时间</th><th>完成时间</th><th>操作</th>
+    </tr></thead><tbody>`;
+    
+    currentData.forEach(r => {
+      const statusBadge = {
+        pending: '<span class="badge badge-warning">待处理</span>',
+        completed: '<span class="badge badge-success">已完成</span>',
+        failed: '<span class="badge badge-danger">失败</span>'
+      }[r.status] || `<span class="badge">${r.status}</span>`;
+      
+      html += `<tr>
+        <td><input type="checkbox" class="checkbox" value="${r.id}" onchange="toggleSelect('${r.id}')"></td>
+        <td>${r.user_id || '-'}</td>
+        <td>${r.service_type || '-'}</td>
+        <td>${statusBadge}</td>
+        <td>${r.created ? new Date(r.created).toLocaleString('zh-CN') : '-'}</td>
+        <td>${r.completed_at || '-'}</td>
+        <td>
+          <button onclick="viewResult('${r.id}')" style="padding:4px 8px;background:#17a2b8;color:#fff;border:none;border-radius:4px;cursor:pointer">查看详情</button>
+        </td>
+      </tr>`;
+    });
+    
+    html += '</tbody></table>';
+    document.getElementById('tableContainer').innerHTML = currentData.length ? html : '<div class="empty-state">暂无数据</div>';
+    
+    renderPagination(data.totalItems || 0);
+  } catch (e) {
+    showToast('加载记录失败: ' + e.message, 'error');
+  }
+}
+
+async function loadFeedbacks() {
+  try {
+    const res = await fetch(`${PB_URL}/api/collections/feedbacks/records?page=${currentPage}&perPage=${pageSize}&sort=-created`, {
+      headers: { 'Authorization': authToken }
+    });
+    const data = await res.json();
+    currentData = data.items || [];
+    
+    let html = `<table><thead><tr>
+      <th><input type="checkbox" class="checkbox" onchange="toggleSelectAll(this)"></th>
+      <th>用户ID</th><th>姓名</th><th>手机</th><th>内容</th><th>提交时间</th><th>操作</th>
+    </tr></thead><tbody>`;
+    
+    currentData.forEach(f => {
+      html += `<tr>
+        <td><input type="checkbox" class="checkbox" value="${f.id}" onchange="toggleSelect('${f.id}')"></td>
+        <td>${f.user_id || '-'}</td>
+        <td>${f.user_name || '-'}</td>
+        <td>${f.user_phone || '-'}</td>
+        <td style="max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${f.content || '-'}</td>
+        <td>${f.created ? new Date(f.created).toLocaleString('zh-CN') : '-'}</td>
+        <td>
+          <button onclick="viewFeedback('${f.id}')" style="padding:4px 8px;background:#17a2b8;color:#fff;border:none;border-radius:4px;cursor:pointer">查看</button>
+        </td>
+      </tr>`;
+    });
+    
+    html += '</tbody></table>';
+    document.getElementById('tableContainer').innerHTML = currentData.length ? html : '<div class="empty-state">暂无数据</div>';
+    
+    renderPagination(data.totalItems || 0);
+  } catch (e) {
+    showToast('加载反馈失败: ' + e.message, 'error');
+  }
+}
+
+async function loadRecharges() {
+  try {
+    const res = await fetch(`${PB_URL}/api/collections/recharge_requests/records?page=${currentPage}&perPage=${pageSize}&sort=-created`, {
+      headers: { 'Authorization': authToken }
+    });
+    const data = await res.json();
+    currentData = data.items || [];
+    
+    let html = `<table><thead><tr>
+      <th><input type="checkbox" class="checkbox" onchange="toggleSelectAll(this)"></th>
+      <th>用户ID</th><th>姓名</th><th>手机</th><th>套餐</th><th>金额</th><th>状态</th><th>提交时间</th><th>操作</th>
+    </tr></thead><tbody>`;
+    
+    currentData.forEach(r => {
+      const statusBadge = {
+        pending: '<span class="badge badge-warning">待确认</span>',
+        confirmed: '<span class="badge badge-success">已确认</span>',
+        rejected: '<span class="badge badge-danger">已拒绝</span>'
+      }[r.status] || `<span class="badge">${r.status}</span>`;
+      
+      html += `<tr>
+        <td><input type="checkbox" class="checkbox" value="${r.id}" onchange="toggleSelect('${r.id}')"></td>
+        <td>${r.user_id || '-'}</td>
+        <td>${r.name || '-'}</td>
+        <td>${r.phone || '-'}</td>
+        <td>${r.package_count || 0}次</td>
+        <td>¥${r.amount || 0}</td>
+        <td>${statusBadge}</td>
+        <td>${r.created ? new Date(r.created).toLocaleString('zh-CN') : '-'}</td>
+        <td>
+          ${r.status === 'pending' ? `
+            <button onclick="confirmRecharge('${r.id}')" style="padding:4px 8px;background:#28a745;color:#fff;border:none;border-radius:4px;cursor:pointer;margin-right:4px">确认</button>
+            <button onclick="rejectRecharge('${r.id}')" style="padding:4px 8px;background:#dc3545;color:#fff;border:none;border-radius:4px;cursor:pointer">拒绝</button>
+          ` : '-'}
+        </td>
+      </tr>`;
+    });
+    
+    html += '</tbody></table>';
+    document.getElementById('tableContainer').innerHTML = currentData.length ? html : '<div class="empty-state">暂无数据</div>';
+    
+    renderPagination(data.totalItems || 0);
+  } catch (e) {
+    showToast('加载充值失败: ' + e.message, 'error');
+  }
+}
+
+function renderPagination(total) {
+  const totalPages = Math.ceil(total / pageSize);
+  let html = '';
+  
+  for (let i = 1; i <= totalPages; i++) {
+    html += `<button class="${i === currentPage ? 'active' : ''}" onclick="goToPage(${i})">${i}</button>`;
+  }
+  
+  document.getElementById('pagination').innerHTML = html;
+}
+
+function goToPage(page) {
+  currentPage = page;
+  loadCurrentTab();
+}
+
+function toggleSelect(id) {
+  if (selectedIds.has(id)) {
+    selectedIds.delete(id);
+  } else {
+    selectedIds.add(id);
+  }
+  
+  document.getElementById('batchDeleteBtn').style.display = selectedIds.size > 0 ? 'inline-block' : 'none';
+}
+
+function toggleSelectAll(checkbox) {
+  currentData.forEach(item => {
+    if (checkbox.checked) {
+      selectedIds.add(item.id);
+    } else {
+      selectedIds.delete(item.id);
+    }
+  });
+  
+  document.querySelectorAll('#tableContainer .checkbox').forEach(cb => cb.checked = checkbox.checked);
+  document.getElementById('batchDeleteBtn').style.display = selectedIds.size > 0 ? 'inline-block' : 'none';
+}
+
+async function batchDelete() {
+  if (!confirm(`确定要删除选中的 ${selectedIds.size} 条记录吗？`)) return;
+  
+  const collectionMap = {
+    users: 'users',
+    results: 'generated_results',
+    feedbacks: 'feedbacks',
+    recharges: 'recharge_requests'
+  };
+  
+  const collection = collectionMap[currentTab];
+  
+  try {
+    for (const id of selectedIds) {
+      await fetch(`${PB_URL}/api/collections/${collection}/records/${id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': authToken }
+      });
+    }
+    
+    showToast(`成功删除 ${selectedIds.size} 条记录`, 'success');
+    selectedIds.clear();
+    loadCurrentTab();
+    loadStats();
+  } catch (e) {
+    showToast('删除失败: ' + e.message, 'error');
+  }
+}
+
+function exportCSV() {
+  if (!currentData.length) {
+    showToast('没有数据可导出', 'error');
+    return;
+  }
+  
+  const headers = Object.keys(currentData[0]);
+  const csvContent = [
+    headers.join(','),
+    ...currentData.map(row => headers.map(h => {
+      const val = row[h];
+      return typeof val === 'string' && val.includes(',') ? `"${val}"` : val;
+    }).join(','))
+  ].join('\n');
+  
+  const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = `${currentTab}_${new Date().toISOString().slice(0, 10)}.csv`;
+  link.click();
+  
+  showToast('CSV 导出成功', 'success');
+}
+
+async function editUser(id) {
+  const user = currentData.find(u => u.id === id);
+  if (!user) return;
+  
+  document.getElementById('editUserEmail').value = user.email || '';
+  document.getElementById('editUserName').value = user.name || '';
+  document.getElementById('editUserPhone').value = user.phone || '';
+  document.getElementById('editUserSchool').value = user.school || '';
+  document.getElementById('editUserRole').value = user.role || 'school';
+  document.getElementById('editUserBalance').value = user.balance || 0;
+  document.getElementById('editUserIsAdmin').value = user.is_admin ? 'true' : 'false';
+  
+  document.getElementById('editUserModal').dataset.userId = id;
+  document.getElementById('editUserModal').classList.remove('hidden');
+}
+
+async function saveUser() {
+  const id = document.getElementById('editUserModal').dataset.userId;
+  const data = {
+    email: document.getElementById('editUserEmail').value,
+    name: document.getElementById('editUserName').value,
+    phone: document.getElementById('editUserPhone').value,
+    school: document.getElementById('editUserSchool').value,
+    role: document.getElementById('editUserRole').value,
+    balance: parseFloat(document.getElementById('editUserBalance').value) || 0,
+    is_admin: document.getElementById('editUserIsAdmin').value === 'true'
+  };
+  
+  try {
+    const res = await fetch(`${PB_URL}/api/collections/users/records/${id}`, {
+      method: 'PATCH',
+      headers: {
+        'Authorization': authToken,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(data)
+    });
+    
+    if (!res.ok) throw new Error('保存失败');
+    
+    showToast('用户更新成功', 'success');
+    closeModal('editUserModal');
+    loadCurrentTab();
+  } catch (e) {
+    showToast('保存失败: ' + e.message, 'error');
+  }
+}
+
+async function deleteUser(id, name) {
+  if (!confirm(`确定要删除用户「${name}」吗？此操作不可恢复！`)) return;
+  
+  try {
+    const res = await fetch(`${PB_URL}/api/collections/users/records/${id}`, {
+      method: 'DELETE',
+      headers: { 'Authorization': authToken }
+    });
+    
+    if (!res.ok) throw new Error('删除失败');
+    
+    showToast('用户已删除', 'success');
+    loadCurrentTab();
+    loadStats();
+  } catch (e) {
+    showToast('删除失败: ' + e.message, 'error');
+  }
+}
+
+async function viewResult(id) {
+  const item = currentData.find(r => r.id === id);
+  if (!item) return;
+  
+  const modal = document.getElementById('detailModal');
+  const title = modal.querySelector('h3');
+  const body = modal.querySelector('.detail-body');
+  
+  title.textContent = '生成记录详情';
+  body.innerHTML = `
+    <p><strong>用户ID：</strong>${item.user_id || '-'}</p>
+    <p><strong>服务类型：</strong>${item.service_type || '-'}</p>
+    <p><strong>状态：</strong>${item.status || '-'}</p>
+    <p><strong>需求内容：</strong></p>
+    <div style="background:#f8f9fa;padding:12px;border-radius:4px;max-height:200px;overflow-y:auto;white-space:pre-wrap;margin-bottom:12px">${item.user_request || '无'}</div>
+    <p><strong>生成结果：</strong></p>
+    <div style="background:#f0fff0;padding:12px;border-radius:4px;max-height:300px;overflow-y:auto;white-space:pre-wrap">${item.result_content || '无'}</div>
+    <p style="margin-top:12px;color:#666;font-size:12px">创建: ${item.created || '-'} | 完成: ${item.completed_at || '-'}</p>
+  `;
+  
+  modal.classList.remove('hidden');
+}
+
+async function viewFeedback(id) {
+  const item = currentData.find(f => f.id === id);
+  if (!item) return;
+  
+  const modal = document.getElementById('detailModal');
+  const title = modal.querySelector('h3');
+  const body = modal.querySelector('.detail-body');
+  
+  title.textContent = '反馈详情';
+  body.innerHTML = `
+    <p><strong>用户：</strong>${item.user_name || '-'} (${item.user_phone || '-'})</p>
+    <p><strong>用户ID：</strong>${item.user_id || '-'}</p>
+    <p><strong>反馈内容：</strong></p>
+    <div style="background:#f8f9fa;padding:12px;border-radius:4px;white-space:pre-wrap">${item.content || '无'}</div>
+    <p style="margin-top:12px;color:#666;font-size:12px">提交时间: ${item.created ? new Date(item.created).toLocaleString('zh-CN') : '-'}</p>
+  `;
+  
+  modal.classList.remove('hidden');
+}
+
+function closeDetailModal() {
+  document.getElementById('detailModal').classList.add('hidden');
+}
+
+async function confirmRecharge(id) {
+  if (!confirm('确认通过此充值请求？')) return;
+  
+  try {
+    const res = await fetch(`${PB_URL}/api/collections/recharge_requests/records/${id}`, {
+      method: 'PATCH',
+      headers: {
+        'Authorization': authToken,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ status: 'confirmed' })
+    });
+    
+    if (!res.ok) throw new Error('操作失败');
+    
+    showToast('充值已确认', 'success');
+    loadCurrentTab();
+    loadStats();
+  } catch (e) {
+    showToast('操作失败: ' + e.message, 'error');
+  }
+}
+
+async function rejectRecharge(id) {
+  if (!confirm('确定要拒绝此充值请求？')) return;
+  
+  try {
+    const res = await fetch(`${PB_URL}/api/collections/recharge_requests/records/${id}`, {
+      method: 'PATCH',
+      headers: {
+        'Authorization': authToken,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ status: 'rejected' })
+    });
+    
+    if (!res.ok) throw new Error('操作失败');
+    
+    showToast('充值已拒绝', 'success');
+    loadCurrentTab();
+  } catch (e) {
+    showToast('操作失败: ' + e.message, 'error');
+  }
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.add('hidden');
+}
+
+function showToast(msg, type) {
+  const toast = document.createElement('div');
+  toast.className = `toast toast-${type}`;
+  toast.textContent = msg;
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), 3000);
+}
+
+// 自动登录检查
+window.onload = async () => {
+  const token = localStorage.getItem('pb_admin_token');
+  if (token) {
+    authToken = token;
+    try {
+      const res = await fetch(`${PB_URL}/api/admins/auth-refresh`, {
+        headers: { 'Authorization': authToken }
+      });
+      if (res.ok) {
+        document.getElementById('loginPage').classList.add('hidden');
+        document.getElementById('mainPage').classList.remove('hidden');
+        loadStats();
+        loadCurrentTab();
+      }
+    } catch (e) {}
+  }
+};
+</script>
+
+</body>
+</html>
