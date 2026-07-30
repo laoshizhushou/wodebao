@@ -2285,16 +2285,256 @@ document.querySelector('.copyright-bar').addEventListener('click', (e) => {
 });
 </script>
 
-<!-- Supabase + Auth Module -->
-<script type="importmap">
-{ "imports": { "@supabase/supabase-js": "https://esm.sh/@supabase/supabase-js@2" } }
-</script>
+<!-- PocketBase + Auth Module -->
 <script type="module">
-import { createClient } from '@supabase/supabase-js';
-const SUPABASE_URL = 'https://hsoidetkfphbrnytudjy.supabase.co';
-const SUPABASE_ANON_KEY = 'sb_publishable_GTMbvPlzAr4CyikOikDJvg_sHT7SsgI';
-const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// ===== PocketBase Shim (Supabase-compatible API) =====
+const PB_BASE = '/pb';
+const LS_TOKEN_KEY = 'pb_token';
+const LS_USER_KEY = 'pb_user';
+
+function getToken() { return localStorage.getItem(LS_TOKEN_KEY) || ''; }
+function setToken(t) { localStorage.setItem(LS_TOKEN_KEY, t); }
+function clearToken() { localStorage.removeItem(LS_TOKEN_KEY); localStorage.removeItem(LS_USER_KEY); }
+
+function pbHeaders() {
+  const h = { 'Content-Type': 'application/json' };
+  const t = getToken();
+  if (t) h['Authorization'] = 'Bearer ' + t;
+  return h;
+}
+
+// Map collection names: profiles -> users
+function mapCollection(name) {
+  if (name === 'profiles') return 'users';
+  return name;
+}
+
+// Map field names for PB: created_at -> created
+function mapFieldName(f) {
+  if (f === 'created_at') return 'created';
+  if (f === 'updated_at') return 'updated';
+  return f;
+}
+
+// Add created_at alias to returned records
+function mapRecord(rec) {
+  if (!rec || typeof rec !== 'object') return rec;
+  if (rec.created && !rec.created_at) rec.created_at = rec.created;
+  if (rec.updated && !rec.updated_at) rec.updated_at = rec.updated;
+  return rec;
+}
+
+// Build PocketBase filter from eq chains
+function buildFilter(eqs) {
+  return eqs.map(e => mapFieldName(e.field) + '="' + e.value + '"').join(' && ');
+}
+
+// Query builder: implements Supabase-like chaining
+class QueryBuilder {
+  constructor(collection, method, payload) {
+    this._collection = mapCollection(collection);
+    this._method = method; // 'select' | 'insert' | 'update' | 'delete'
+    this._payload = payload || null;
+    this._fields = '*';
+    this._eqs = [];
+    this._sort = '';
+    this._limit = null;
+    this._single = false;
+  }
+  select(fields) { this._fields = fields; return this; }
+  eq(field, value) { this._eqs.push({ field, value }); return this; }
+  order(field, opts) {
+    const dir = (opts && opts.ascending === false) ? '-' : '';
+    this._sort = dir + mapFieldName(field);
+    return this;
+  }
+  limit(n) { this._limit = n; return this; }
+  single() { this._single = true; return this; }
+
+  async then(resolve, reject) {
+    try {
+      const result = await this._execute();
+      resolve(result);
+    } catch(e) {
+      // Return { data: null, error: ... } on error, matching Supabase behavior
+      resolve({ data: null, error: e });
+    }
+  }
+
+  async _execute() {
+    const col = this._collection;
+    const base = PB_BASE + '/api/collections/' + col + '/records';
+
+    if (this._method === 'insert') {
+      const resp = await fetch(base, { method: 'POST', headers: pbHeaders(), body: JSON.stringify(this._payload) });
+      if (!resp.ok) { const e = await resp.json().catch(() => ({})); throw { message: e.message || 'Insert failed' }; }
+      const data = await resp.json();
+      return { data: mapRecord(data), error: null };
+    }
+
+    if (this._method === 'update' || this._method === 'delete') {
+      // Need to find the record ID from eq filters
+      let recordId = null;
+      for (const eq of this._eqs) {
+        if (eq.field === 'id') { recordId = eq.value; break; }
+      }
+      if (!recordId) {
+        // Try to find by other filters
+        const filter = buildFilter(this._eqs);
+        const listUrl = base + '?filter=' + encodeURIComponent(filter) + '&perPage=1';
+        const listResp = await fetch(listUrl, { headers: pbHeaders() });
+        if (listResp.ok) {
+          const listData = await listResp.json();
+          if (listData.items && listData.items.length > 0) recordId = listData.items[0].id;
+        }
+      }
+      if (!recordId) return { data: null, error: { message: 'Record not found' } };
+
+      const url = base + '/' + recordId;
+      const method = this._method === 'update' ? 'PATCH' : 'DELETE';
+      const opts = { method, headers: pbHeaders() };
+      if (this._method === 'update') opts.body = JSON.stringify(this._payload);
+      const resp = await fetch(url, opts);
+      if (!resp.ok) { const e = await resp.json().catch(() => ({})); throw { message: e.message || 'Operation failed' }; }
+      const data = this._method === 'update' ? await resp.json() : null;
+      return { data: data ? mapRecord(data) : null, error: null };
+    }
+
+    // SELECT
+    const params = new URLSearchParams();
+    if (this._fields !== '*') params.set('fields', this._fields.split(',').map(mapFieldName).join(','));
+    const filter = buildFilter(this._eqs);
+    if (filter) params.set('filter', filter);
+    if (this._sort) params.set('sort', this._sort);
+    if (this._single) { params.set('perPage', '1'); }
+    else if (this._limit) { params.set('perPage', String(this._limit)); }
+    params.set('skipTotal', 'true');
+
+    const url = base + '?' + params.toString();
+    const resp = await fetch(url, { headers: pbHeaders() });
+    if (!resp.ok) { const e = await resp.json().catch(() => ({})); throw { message: e.message || 'Query failed' }; }
+    const result = await resp.json();
+    let items = (result.items || []).map(mapRecord);
+
+    if (this._single) {
+      return { data: items[0] || null, error: items[0] ? null : { message: 'Not found' } };
+    }
+    return { data: items, error: null };
+  }
+}
+
+// Auth module
+const auth = {
+  async signUp({ email, password, options }) {
+    const userData = options?.data || {};
+    const phone = userData.phone || email?.replace('@teacher.local', '') || '';
+    try {
+      const resp = await fetch(PB_BASE + '/api/collections/users/records', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username: phone,
+          password: password,
+          passwordConfirm: password,
+          name: userData.name || '',
+          phone: phone,
+          email: userData.email || (phone + '@teacher.local'),
+          school: userData.school || '',
+          role: 'external',
+          balance: 5
+        })
+      });
+      if (!resp.ok) {
+        const err = await resp.json().catch(() => ({}));
+        if (err.data && err.data.username) return { data: { user: null, session: null }, error: { message: '该手机号已注册' } };
+        return { data: { user: null, session: null }, error: { message: err.message || '注册失败' } };
+      }
+      const user = await resp.json();
+      // Auto-login after registration
+      const authResp = await fetch(PB_BASE + '/api/collections/users/auth-with-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ identity: phone, password: password })
+      });
+      if (authResp.ok) {
+        const authData = await authResp.json();
+        setToken(authData.token);
+        localStorage.setItem(LS_USER_KEY, JSON.stringify(authData.record));
+      }
+      return { data: { user: { id: user.id, email: phone + '@teacher.local' }, session: { access_token: getToken() } }, error: null };
+    } catch(e) {
+      return { data: { user: null }, error: { message: e.message || '注册失败' } };
+    }
+  },
+
+  async signInWithPassword({ email, password }) {
+    const identity = email?.replace('@teacher.local', '') || '';
+    try {
+      const resp = await fetch(PB_BASE + '/api/collections/users/auth-with-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ identity: identity, password: password })
+      });
+      if (!resp.ok) {
+        const err = await resp.json().catch(() => ({}));
+        return { data: { user: null, session: null }, error: { message: err.message || '手机号或密码错误' } };
+      }
+      const data = await resp.json();
+      setToken(data.token);
+      localStorage.setItem(LS_USER_KEY, JSON.stringify(data.record));
+      return { data: { user: { id: data.record.id, email: data.record.email || identity + '@teacher.local' }, session: { access_token: data.token } }, error: null };
+    } catch(e) {
+      return { data: { user: null, session: null }, error: { message: e.message || '登录失败' } };
+    }
+  },
+
+  async signOut() {
+    clearToken();
+  },
+
+  async getUser() {
+    const t = getToken();
+    if (!t) return { data: { user: null } };
+    try {
+      const resp = await fetch(PB_BASE + '/api/collections/users/auth-record', { headers: { 'Authorization': 'Bearer ' + t } });
+      if (!resp.ok) return { data: { user: null } };
+      const user = await resp.json();
+      return { data: { user: { id: user.id, email: user.email || user.username + '@teacher.local' } } };
+    } catch(e) {
+      return { data: { user: null } };
+    }
+  },
+
+  async getSession() {
+    const t = getToken();
+    if (!t) return { data: { session: null } };
+    // Verify token is still valid
+    try {
+      const resp = await fetch(PB_BASE + '/api/collections/users/auth-record', { headers: { 'Authorization': 'Bearer ' + t } });
+      if (!resp.ok) { clearToken(); return { data: { session: null } }; }
+      return { data: { session: { access_token: t } } };
+    } catch(e) {
+      return { data: { session: null } };
+    }
+  }
+};
+
+// Main sb object
+const sb = { auth, from: (collection) => new QueryBuilder(collection, 'select') };
+
+// Override from to support method chaining with insert/update/delete
+const origFrom = sb.from;
+sb.from = function(collection) {
+  return {
+    select: (fields) => new QueryBuilder(collection, 'select').select(fields),
+    insert: (payload) => new QueryBuilder(collection, 'insert', payload),
+    update: (payload) => new QueryBuilder(collection, 'update', payload),
+    delete: () => new QueryBuilder(collection, 'delete')
+  };
+};
+
 window._sb = sb;
+window._pbBase = { getToken, setToken, clearToken, PB_BASE, pbHeaders, mapCollection, mapRecord };
 window._currentUser = null;
 
 // ========== Auth ==========
@@ -2314,24 +2554,18 @@ window.doRegister = async function() {
   const password = document.getElementById('regPassword').value;
   const errEl = document.getElementById('authError');
   if (!name || !phone || !password) { errEl.textContent = '请填写姓名、手机号和密码'; return; }
-  if (password.length < 6) { errEl.textContent = '密码至少6位'; return; }
+  if (password.length < 8) { errEl.textContent = '密码至少8位'; return; }
   if (!/^1\d{10}$/.test(phone)) { errEl.textContent = '请输入正确的11位手机号'; return; }
   if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { errEl.textContent = '邮箱格式不正确'; return; }
   const btn = document.getElementById('btnRegister');
   btn.disabled = true; btn.textContent = '注册中...';
-  const { data, error } = await sb.auth.signUp({ email: phone + '@teacher.local', password, options: { data: { phone, name } } });
+  const { data, error } = await sb.auth.signUp({ email: phone + '@teacher.local', password, options: { data: { phone, name, school: school || '', email: email || '' } } });
   if (error && !error.message.includes('already')) { errEl.textContent = '注册失败: ' + error.message; btn.disabled = false; btn.textContent = '注 册'; return; }
-  const userId = data?.user?.id || '';
-  if (userId) {
-    // 使用REST API直接创建profile，避免RLS在无session时阻止写入
-    try {
-      const profileResp = await fetch(SUPABASE_URL + '/rest/v1/profiles', {
-        method: 'POST',
-        headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY, 'Content-Type': 'application/json', 'Prefer': 'resolution=merge-duplicates' },
-        body: JSON.stringify({ id: userId, phone: phone, name: name, school: school || '', email: email || '', role: 'external', balance: 5 })
-      });
-      if (!profileResp.ok) console.warn('[注册] profile创建异常:', profileResp.status);
-    } catch(e) { console.warn('[注册] profile创建失败:', e); }
+  // PocketBase signUp already creates user with all fields (name, phone, school, email, role, balance)
+  if (error && error.message.includes('already')) {
+    // User already exists, try to login directly
+    const { data: loginData, error: loginError } = await sb.auth.signInWithPassword({ email: phone + '@teacher.local', password });
+    if (loginError) { errEl.textContent = '该手机号已注册'; btn.disabled = false; btn.textContent = '注 册'; return; }
   }
   btn.disabled = false; btn.textContent = '注 册';
   await afterLogin();
