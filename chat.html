@@ -2006,7 +2006,10 @@ async function submitForm() {
     resultDiv.innerHTML =
       '<div class="bot-avatar">AI</div>' +
       '<div class="bubble" style="max-width:92%;background:transparent;border:none;padding:0;">' +
-        '<div style="font-weight:600;font-size:13px;color:#059669;margin-bottom:8px;">✅ AI 生成完成</div>' +
+        '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">' +
+          '<div style="font-weight:600;font-size:13px;color:#059669;">✅ AI 生成完成</div>' +
+          '<button class="btn-action" style="font-size:12px;padding:5px 12px;background:linear-gradient(135deg, #667eea, #764ba2);color:#fff;border-color:#667eea;" onclick="backToHome()">返回首页</button>' +
+        '</div>' +
         '<div class="file-msg" onclick="toggleFileExpand(this)">' +
           '<div class="file-icon ' + fc.cls + '">' + fc.icon + '</div>' +
           '<div class="file-info">' +
