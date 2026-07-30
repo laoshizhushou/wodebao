@@ -2433,11 +2433,9 @@ const auth = {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          username: phone,
           password: password,
           passwordConfirm: password,
           name: userData.name || '',
-          phone: phone,
           email: userData.email || (phone + '@teacher.local'),
           school: userData.school || '',
           role: 'external',
@@ -2446,7 +2444,9 @@ const auth = {
       });
       if (!resp.ok) {
         const err = await resp.json().catch(() => ({}));
-        if (err.data && err.data.username) return { data: { user: null, session: null }, error: { message: '该手机号已注册' } };
+        const d = err.data || {};
+        if (d.username) return { data: { user: null, session: null }, error: { message: '该手机号已注册' } };
+        if (d.email) return { data: { user: null, session: null }, error: { message: d.email.message || '该邮箱已被使用' } };
         return { data: { user: null, session: null }, error: { message: err.message || '注册失败' } };
       }
       const user = await resp.json();
@@ -2454,7 +2454,7 @@ const auth = {
       const authResp = await fetch(PB_BASE + '/api/collections/users/auth-with-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ identity: phone, password: password })
+        body: JSON.stringify({ identity: userData.email || (phone + '@teacher.local'), password: password })
       });
       if (authResp.ok) {
         const authData = await authResp.json();
@@ -2496,10 +2496,10 @@ const auth = {
     const t = getToken();
     if (!t) return { data: { user: null } };
     try {
-      const resp = await fetch(PB_BASE + '/api/collections/users/auth-record', { headers: { 'Authorization': 'Bearer ' + t } });
+      const resp = await fetch(PB_BASE + '/api/collections/users/auth-refresh', { method: 'POST', headers: { 'Authorization': 'Bearer ' + t, 'Content-Type': 'application/json' } });
       if (!resp.ok) return { data: { user: null } };
       const user = await resp.json();
-      return { data: { user: { id: user.id, email: user.email || user.username + '@teacher.local' } } };
+      return { data: { user: { id: user.record.id, email: user.record.email } } };
     } catch(e) {
       return { data: { user: null } };
     }
@@ -2510,7 +2510,7 @@ const auth = {
     if (!t) return { data: { session: null } };
     // Verify token is still valid
     try {
-      const resp = await fetch(PB_BASE + '/api/collections/users/auth-record', { headers: { 'Authorization': 'Bearer ' + t } });
+      const resp = await fetch(PB_BASE + '/api/collections/users/auth-refresh', { method: 'POST', headers: { 'Authorization': 'Bearer ' + t, 'Content-Type': 'application/json' } });
       if (!resp.ok) { clearToken(); return { data: { session: null } }; }
       return { data: { session: { access_token: t } } };
     } catch(e) {
