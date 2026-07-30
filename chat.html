@@ -880,11 +880,29 @@
 <script>
 // ========== Data Config ==========
 const subjects = ['语文','数学','英语','物理','化学','生物','历史','地理','政治','科学','道德与法治','音乐','美术','体育','信息技术'];
-const grades = [
+const allGrades = [
   '小学一年级','小学二年级','小学三年级','小学四年级','小学五年级','小学六年级',
   '初中七年级','初中八年级','初中九年级',
   '高中一年级','高中二年级','高中三年级'
 ];
+// 学科-年级合理搭配（避免出现化学+一年级这种不合理组合）
+const subjectGradeMap = {
+  '语文': allGrades,
+  '数学': allGrades,
+  '英语': ['小学三年级','小学四年级','小学五年级','小学六年级','初中七年级','初中八年级','初中九年级','高中一年级','高中二年级','高中三年级'],
+  '物理': ['初中八年级','初中九年级','高中一年级','高中二年级','高中三年级'],
+  '化学': ['初中九年级','高中一年级','高中二年级','高中三年级'],
+  '生物': ['初中七年级','初中八年级','初中九年级','高中一年级','高中二年级','高中三年级'],
+  '历史': ['初中七年级','初中八年级','初中九年级','高中一年级','高中二年级','高中三年级'],
+  '地理': ['初中七年级','初中八年级','初中九年级','高中一年级','高中二年级','高中三年级'],
+  '政治': ['初中七年级','初中八年级','初中九年级','高中一年级','高中二年级','高中三年级'],
+  '道德与法治': allGrades,
+  '科学': ['小学三年级','小学四年级','小学五年级','小学六年级'],
+  '音乐': allGrades,
+  '美术': allGrades,
+  '体育': allGrades,
+  '信息技术': ['小学三年级','小学四年级','小学五年级','小学六年级','初中七年级','初中八年级','初中九年级','高中一年级','高中二年级','高中三年级']
+};
 const questionTypes = ['选择题','填空题','判断题','简答题','计算题','论述题','应用题','阅读理解','作文'];
 const deyuTypes = ['班会设计','学生评语','家校沟通','德育方案'];
 const jiaowuTypes = ['排课调课','成绩分析','通知公告','学期计划','会议纪要','考勤管理'];
@@ -1112,14 +1130,14 @@ function showForm(type) {
   if (type === 'jiaoan') {
     html += buildSelect('region', '地区', regions, false) +
             buildSelect('subject', '学科', subjects, true) +
-            buildSelect('grade', '年级', grades, true) +
+            buildSelect('grade', '年级', allGrades, true) +
             buildSelect('textbook', '教材版本', textbookVersions, true) +
             buildInput('topic', '课题', '如：《荷塘月色》', true) +
             buildTextarea('extra', '其他要求', '如：重点突出朗读指导、需包含板书设计等', false);
   } else if (type === 'chujuan') {
     html += buildSelect('region', '地区', regions, false) +
             buildSelect('subject', '学科', subjects, true) +
-            buildSelect('grade', '年级', grades, true) +
+            buildSelect('grade', '年级', allGrades, true) +
             buildSelect('textbook', '教材版本', textbookVersions, true) +
             buildInput('knowledge', '知识点', '如：一元二次方程', true) +
             buildCheckboxes('qtypes', '题型选择（可多选）', questionTypes) +
@@ -1154,7 +1172,7 @@ function showForm(type) {
   } else if (type === 'zhishidian') {
     html += buildSelect('region', '地区', regions, false) +
             buildSelect('subject', '学科', subjects, true) +
-            buildSelect('grade', '年级', grades, true) +
+            buildSelect('grade', '年级', allGrades, true) +
             buildSelect('textbook', '教材版本', textbookVersions, true) +
             buildInput('zhishidian', '知识点/章节', '如：第三章 二次函数', true) +
             buildRadioGroup('summary_type', '总结类型', zhishidianTypes);
@@ -1173,9 +1191,31 @@ function showForm(type) {
   // Check last params
   showLastParamsBar(type);
 
+  // 绑定学科→年级联动（选了学科后，年级只显示合理选项）
+  bindSubjectGradeLinkage(type);
+
   formArea.scrollTop = 0;
 }
 window.showForm = showForm;
+
+// 学科-年级联动：根据已选学科过滤年级下拉选项
+function bindSubjectGradeLinkage(type) {
+  // 只有教案、出卷、知识点总结有学科+年级联动
+  if (!['jiaoan','chujuan','zhishidian'].includes(type)) return;
+  const subjectEl = document.getElementById('f_subject');
+  const gradeEl = document.getElementById('f_grade');
+  if (!subjectEl || !gradeEl) return;
+
+  subjectEl.addEventListener('change', function() {
+    const subj = this.value;
+    const validGrades = subjectGradeMap[subj] || allGrades;
+    // 重建年级下拉
+    let opts = '<option value="" disabled selected>请选择年级</option>';
+    validGrades.forEach(g => { opts += '<option value="' + g + '">' + g + '</option>'; });
+    gradeEl.innerHTML = opts;
+  });
+}
+window.bindSubjectGradeLinkage = bindSubjectGradeLinkage;
 
 function buildSelect(name, label, options, required) {
   const req = required ? '<span class="required">*</span>' : '';
